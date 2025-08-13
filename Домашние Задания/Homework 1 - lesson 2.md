@@ -12,7 +12,7 @@ off
 ## Первая сессия: создание таблицы и вставка данных.
 Делаю в первой сессии таблицу:
 ```
-postgres=# create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;
+postgres=# CREATE TABLE persons(id serial, first_name text, second_name text); INSERT into persons(first_name, second_name) values('ivan', 'ivanov'); INSERT into persons(first_name, second_name) values('petr', 'petrov'); COMMIT;
 CREATE TABLE
 INSERT 0 1
 INSERT 0 1
@@ -29,14 +29,14 @@ postgres=*# show transaction isolation level;
 ## Работа с транзакциями.
 Начинаю новую транзакцию, в первой сессии добавляю новую запись:
 ```
-postgres=# begin;
+postgres=# BEGIN;
 BEGIN
-postgres=*# insert into persons(first_name, second_name) values('sergey', 'sergeev');
+postgres=*# INSERT into persons(first_name, second_name) values('sergey', 'sergeev');
 INSERT 0 1
 ```
 Во второй сессии делаю `select * from persons`:
 ```
-postgres-# select * from persons;
+postgres-# SELECT * FROM persons;
  id | first_name | second_name 
 ----+------------+-------------
   1 | ivan       | ivanov
@@ -47,7 +47,7 @@ postgres-#
 Не вижу новую запись, так как AUTOCOMMIT отключён, а текущий уровень транзакции = `read committed`, т.е. показываются только записи, которые уже были зафиксированы (COMMIT). <br>
 Возвращаюсь в первую сессию, делаю COMMIT, переключаюсь во вторую сессию, делаю `select * from persons`:
 ```
-postgres=# select * from persons;
+postgres=# SELECT * FROM persons;
  id | first_name | second_name
 ----+------------+-------------
   1 | ivan       | ivanov
@@ -64,12 +64,12 @@ SET
 ```
 В первой сессии добавляю новую запись:
 ```
-postgres=*# insert into persons(first_name, second_name) values('sveta', 'svetova');
+postgres=*# INSERT into persons(first_name, second_name) values('sveta', 'svetova');
 INSERT 0 1
 ```
 Во второй сессии делаю `select * from persons`. Вижу:
 ```
-postgres=*# select * from persons;
+postgres=*# SELECT * FROM persons;
  id | first_name | second_name
 ----+------------+-------------
   1 | ivan       | ivanov
@@ -80,7 +80,7 @@ postgres=*# select * from persons;
 Новая запись не появилась, т.к. мы работаем на уровне изоляции = `repeatable read`, что означает, что будут видны только те данные, которые были зафиксированы до начала транзакции, а новые и незафиксированные изменения видны не будут. <br>
 Завершаю транзакцию в первой сессии, делаю `select * from persons`:
 ```
-postgres=*# select * from persons;
+postgres=*# SELECT * FROM persons;
  id | first_name | second_name
 ----+------------+-------------
   1 | ivan       | ivanov
@@ -91,9 +91,9 @@ postgres=*# select * from persons;
 Снова вижу отсутствие изменений, что опять же объясняется уровнем изоляции = `repeatable read.` <br>
 Завершаю транзакцию во второй сессии, повторно делаю `select * from persons`:
 ```
-postgres=*# commit;
+postgres=*# COMMIT;
 COMMIT
-postgres=# select * from persons;
+postgres=# SELECT * FROM persons;
  id | first_name | second_name
 ----+------------+-------------
   1 | ivan       | ivanov
