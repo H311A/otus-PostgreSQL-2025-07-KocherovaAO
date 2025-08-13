@@ -66,3 +66,4 @@ INSERT 0 2
 (2 rows)
 ```
 ## Подключаюсь с Windows-машины к серверу через PGAdmin4:
+![alt text](https://github.com/H311A/otus-PostgreSQL-2025-07-KocherovaAO/blob/main/Домашние%20Задания/Скриншоты/hmwk2screen1.png)
