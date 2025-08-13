@@ -8,3 +8,11 @@ postgres=# \set AUTOCOMMIT off
 postgres=# \echo :AUTOCOMMIT
 off
 ```
+Делаю в первой сессии таблицу:
+```
+postgres=# create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+COMMIT
+```
