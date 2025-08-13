@@ -33,7 +33,22 @@ INSERT 0 1
 ```
 Во второй сессии делаю select * from persons:
 ```
-postgres-# select * from persons
+postgres-# select * from persons;
+ id | first_name | second_name 
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+(2 строки)
 postgres-#
 ```
-Не вижу новую запись, так как AUTOCOMMIT отключён, а текущий уровень транзакции = read committed, т.е. показываются только записи, которые уже были зафиксированы (COMMIT).
+Не вижу новую запись, так как AUTOCOMMIT отключён, а текущий уровень транзакции = read committed, т.е. показываются только записи, которые уже были зафиксированы (COMMIT). Возвращаюсь в первую сессию, делаю COMMIT, переключаюсь во вторую сессию, делаю select * from persons:
+```
+postgres=# select * from persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+(3 строки)
+```
+Новая запись про Сергеева Сергея появилась, т.к. мы зафиксировали (COMMIT) транзакцию в первой сессии.
