@@ -16,3 +16,11 @@ INSERT 0 1
 INSERT 0 1
 COMMIT
 ```
+Уровень изоляции:
+```
+postgres=*# show transaction isolation level;
+ transaction_isolation
+-----------------------
+ read committed
+(1 строка)
+```
