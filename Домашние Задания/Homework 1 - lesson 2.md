@@ -1,13 +1,15 @@
+# Эксперимент с уровнями изоляции в PostgreSQL.
 ```
 Окружение: ВМ на Oracle Linux 8.10. PosgreSQL 17.
 ```
-
+## Начало работы.
 Запускаю две сессии psql из-под пользователя postgres. Выключаю AUTOCOMMIT:
 ```
 postgres=# \set AUTOCOMMIT off
 postgres=# \echo :AUTOCOMMIT
 off
 ```
+## Первая сессия: создание таблицы и вставка данных.
 Делаю в первой сессии таблицу:
 ```
 postgres=# create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;
@@ -24,6 +26,7 @@ postgres=*# show transaction isolation level;
  read committed
 (1 строка)
 ```
+## Работа с транзакциями.
 Начинаю новую транзакцию, в первой сессии добавляю новую запись:
 ```
 postgres=# begin;
@@ -52,7 +55,8 @@ postgres=# select * from persons;
   3 | sergey     | sergeev
 (3 строки)
 ```
-Новая запись про Сергеева Сергея появилась, т.к. мы зафиксировали (COMMIT) транзакцию в первой сессии. <br>
+Новая запись про Сергеева Сергея появилась, т.к. мы зафиксировали (COMMIT) транзакцию в первой сессии.
+## Изменение уровня изоляции.
 Переключаюсь на другой уровень изоляции `repeatable read`: 
 ```
 postgres=# set transaction isolation level repeatable read;
@@ -105,4 +109,4 @@ postgres=*# show transaction isolation level;
 (1 строка)
 
 ```
-Теперь новая запись видна, т.к. после фиксации транзакции мы перешли на уровень изоляции по умолчанию = `read committed`.
+**Итог**: Теперь новая запись видна, т.к. после фиксации транзакции мы перешли на уровень изоляции по умолчанию = `read committed`.
