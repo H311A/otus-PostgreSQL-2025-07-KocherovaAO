@@ -24,3 +24,16 @@ postgres=*# show transaction isolation level;
  read committed
 (1 строка)
 ```
+Начинаю новую транзакцию, в первой сессии добавляю новую запись:
+```
+postgres=# begin;
+BEGIN
+postgres=*# insert into persons(first_name, second_name) values('sergey', 'sergeev');
+INSERT 0 1
+```
+Во второй сессии делаю select * from persons:
+```
+postgres-# select * from persons
+postgres-#
+```
+Не вижу новую запись, так как AUTOCOMMIT отключён, а текущий уровень транзакции = read committed, т.е. показываются только записи, которые уже были зафиксированы (COMMIT).
