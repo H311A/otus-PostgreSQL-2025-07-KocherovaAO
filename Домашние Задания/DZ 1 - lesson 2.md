@@ -1,3 +1,3 @@
-Окружение:
--   OS: Oracle Linux 8.10.
--   PosgreSQL 17.
+```
+Окружение: ВМ на Oracle Linux 8.10. PosgreSQL 17.
+```
