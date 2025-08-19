@@ -1,6 +1,6 @@
 # Установка и настройка PostgreSQL
 ```
-Окружение: Oracle Linux 8.10. PotsgreSQL 17.
+Окружение: VMware. Oracle Linux 8.10. LVM + ext4. PotsgreSQL 17.
 
 [root@postgresql ~]# sudo -u postgres psql -c "SELECT version();"
                                                  version
