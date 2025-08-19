@@ -38,7 +38,7 @@ pg_ctl: сервер работает (PID: 3170)
 авг 19 11:54:48 postgresql systemd[1]: Started PostgreSQL 17 database server.
 lines 1-21/21 (END)...skipping...
 ```
-Создаю таблицу с произвольными данными:
+Создаю таблицу с произвольными данными и останавливаю postgres:
 ```
 [root@postgresql ~]# sudo -u postgres psql
 psql (17.5)
@@ -49,4 +49,9 @@ CREATE TABLE
 postgres=# INSERT INTO test VALUES('1');
 INSERT 0 1
 postgres=# \q
+
+[root@postgresql ~]# sudo systemctl stop postgresql-17
+```
+Добавляю на ВМ новый диск 10гб.
+```
 ```
