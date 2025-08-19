@@ -167,7 +167,7 @@ postgres=# SELECT * FROM test;
 ```
 [root@postgresql2 ~]# df -h /mnt/data
 Файловая система            Размер Использовано  Дост Использовано% Cмонтировано в
-/dev/sdb                      9,8G        1,2G  8,1G           13% /mnt/data
+/dev/mapper/vg_data-lv_data   9,8G          40M  9,2G            1% /mnt/data
 ```
 Меняю `${PGDATA}` на новой VM в конфигурационном файле `/usr/lib/systemd/system/postgresql-17.service` c `Environment=PGDATA=/var/lib/pgsql/17/data` на `Environment=PGDATA=/mnt/data/data`, настраиваю права:
 ```
