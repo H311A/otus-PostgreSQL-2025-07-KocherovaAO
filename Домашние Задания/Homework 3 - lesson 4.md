@@ -158,7 +158,15 @@ See "systemctl status postgresql-17.service" and "journalctl -xe" for details.
 ```
 Всё получилось. Захожу в psql, проверяю раннее созданную таблицу:
 ```
+[root@postgresql ~]# sudo -u postgres psql
+psql (17.5)
+Введите "help", чтобы получить справку.
 
+postgres=# SELECT * FROM test;
+ c1
+----
+ 1
+(1 строка)
 ```
 
 ## Задание со звёздочкой.
