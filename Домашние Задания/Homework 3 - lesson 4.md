@@ -109,4 +109,8 @@ Writing superblocks and filesystem accounting information: done
 [root@postgresql ~]# blkid /dev/vg_data/lv_data
 /dev/vg_data/lv_data: UUID="453e402c-7c55-4e01-a5e1-df734d3e0bc8" BLOCK_SIZE="4096" TYPE="ext4"
 Добавляю строчку в fstab: UUID=453e402c-7c55-4e01-a5e1-df734d3e0bc8  /mnt/data  ext4  defaults  0  2
+
+[root@postgresql ~]# df -h /mnt/data
+Файловая система            Размер Использовано  Дост Использовано% Cмонтировано в
+/dev/mapper/vg_data-lv_data   9,8G          24K  9,3G            1% /mnt/data
 ```
