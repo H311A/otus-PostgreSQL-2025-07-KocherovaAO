@@ -114,3 +114,33 @@ Writing superblocks and filesystem accounting information: done
 Файловая система            Размер Использовано  Дост Использовано% Cмонтировано в
 /dev/mapper/vg_data-lv_data   9,8G          24K  9,3G            1% /mnt/data
 ```
+Делаю postgres владельцем /mnt/data:
+```
+[root@postgresql ~]# chown -R postgres:postgres /mnt/data
+[root@postgresql ~]# chmod 750 /mnt/data
+```
+Переношу содержимое /var/lib/postgres/17 в /mnt/data и пытаюсь запустить кластер: 
+```
+[root@postgresql ~]# mv /var/lib/pgsql/17/data /mnt/data/
+[root@postgresql ~]# sudo systemctl start postgresql-17
+Job for postgresql-17.service failed because the control process exited with error code.
+See "systemctl status postgresql-17.service" and "journalctl -xe" for details.
+```
+Перенос не закончен, так как PostgreSQL ищет данные по пути, указанному в конфигурации. Иду менять конфигурационный файл postgresql.conf. Меняю
+```
+#data_directory = 'ConfigDir'           # use data in another directory
+                                        # (change requires restart)
+#hba_file = 'ConfigDir/pg_hba.conf'     # host-based authentication file
+                                        # (change requires restart)
+#ident_file = 'ConfigDir/pg_ident.conf' # ident configuration file
+                                        # (change requires restart)
+```
+на 
+```
+data_directory = '/mnt/data/data'               # use data in another directory
+                                                # (change requires restart)
+hba_file = '/mnt/data/data/pg_hba.conf'         # host-based authentication file
+                                                # (change requires restart)
+ident_file = '/mnt/data/data/pg_ident.conf'     # ident configuration file
+
+```
