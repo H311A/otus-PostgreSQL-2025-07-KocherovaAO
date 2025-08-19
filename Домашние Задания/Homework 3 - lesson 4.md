@@ -8,7 +8,7 @@
  PostgreSQL 17.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-26), 64-bit
 (1 строка)
 ```
-Так как у меня не Ubuntu, проверяю через pg_ctl или systemctl:
+Так как у меня не Ubuntu, проверяю через `pg_ctl` или `systemctl`:
 ```
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pg_ctl -D /var/lib/pgsql/17/data/ status
 pg_ctl: сервер работает (PID: 3170)
@@ -31,12 +31,6 @@ pg_ctl: сервер работает (PID: 3170)
            ├─3176 postgres: walwriter
            ├─3177 postgres: autovacuum launcher
            └─3178 postgres: logical replication launcher
-
-авг 19 11:54:48 postgresql systemd[1]: Starting PostgreSQL 17 database server...
-авг 19 11:54:48 postgresql postgres[3170]: 2025-08-19 11:54:48.570 MSK [3170] СООБЩЕНИЕ:  передач>
-авг 19 11:54:48 postgresql postgres[3170]: 2025-08-19 11:54:48.570 MSK [3170] ПОДСКАЗКА:  В дальн>
-авг 19 11:54:48 postgresql systemd[1]: Started PostgreSQL 17 database server.
-lines 1-21/21 (END)...skipping...
 ```
 Создаю таблицу с произвольными данными и останавливаю postgres:
 ```
@@ -59,15 +53,6 @@ postgres=# \q
   Process: 1183 ExecStart=/usr/pgsql-17/bin/postgres -D ${PGDATA} (code=exited, status=0/SUCCESS)
   Process: 1162 ExecStartPre=/usr/pgsql-17/bin/postgresql-17-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
  Main PID: 1183 (code=exited, status=0/SUCCESS)
-
-авг 19 12:25:01 postgresql systemd[1]: Starting PostgreSQL 17 database server...
-авг 19 12:25:03 postgresql postgres[1183]: 2025-08-19 12:25:03.887 MSK [1183] СООБЩЕНИЕ:  передача вывода в протокол процессу сбора протоколов
-авг 19 12:25:03 postgresql postgres[1183]: 2025-08-19 12:25:03.887 MSK [1183] ПОДСКАЗКА:  В дальнейшем протоколы будут выводиться в каталог "log".
-авг 19 12:25:04 postgresql systemd[1]: Started PostgreSQL 17 database server.
-авг 19 12:25:27 postgresql systemd[1]: Stopping PostgreSQL 17 database server...
-авг 19 12:25:27 postgresql systemd[1]: postgresql-17.service: Killing process 1312 (postgres) with signal SIGKILL.
-авг 19 12:25:27 postgresql systemd[1]: postgresql-17.service: Succeeded.
-авг 19 12:25:27 postgresql systemd[1]: Stopped PostgreSQL 17 database server.
 ```
 Добавляю на ВМ новый диск 10гб:
 
@@ -83,7 +68,7 @@ sda           8:0    0   40G  0 disk
 sdb           8:16   0   10G  0 disk
 sr0          11:0    1 13,2G  0 rom
 ```
-Дальше инициализирую диск, монтирую и прописываю его в /ets/fstab:
+Дальше инициализирую диск, монтирую и прописываю его в `/ets/fstab`:
 ```
 [root@postgresql ~]# pvcreate /dev/sdb
   Physical volume "/dev/sdb" successfully created.
@@ -114,23 +99,23 @@ Writing superblocks and filesystem accounting information: done
 Файловая система            Размер Использовано  Дост Использовано% Cмонтировано в
 /dev/mapper/vg_data-lv_data   9,8G          24K  9,3G            1% /mnt/data
 ```
-Делаю postgres владельцем /mnt/data:
+Делаю postgres владельцем `/mnt/data`:
 ```
 [root@postgresql ~]# chown -R postgres:postgres /mnt/data
 [root@postgresql ~]# chmod 750 /mnt/data
 ```
-Переношу содержимое /var/lib/postgres/17 в /mnt/data и пытаюсь запустить кластер: 
+Переношу содержимое `/var/lib/postgres/17` в `/mnt/data` и пытаюсь запустить кластер: 
 ```
 [root@postgresql ~]# mv /var/lib/pgsql/17/data /mnt/data/
 [root@postgresql ~]# sudo systemctl start postgresql-17
 Job for postgresql-17.service failed because the control process exited with error code.
 See "systemctl status postgresql-17.service" and "journalctl -xe" for details.
 ```
-Перенос не закончен, так как PostgreSQL ищет данные по пути, указанному в конфигурации. Иду менять конфигурационный файл postgresql-17.service:
+Перенос не закончен, так как PostgreSQL ищет данные по пути, указанному в конфигурации. Иду менять конфигурационный файл `postgresql-17.service`:
 ```
 [root@postgresql ~]# vi /usr/lib/systemd/system/postgresql-17.service
 ```
-Меняю `Environment=PGDATA=/var/lib/pgsql/17/data/` на `Environment=PGDATA=/mnt/data/data`, в конфиге postgresql.conf директория закомментирована и прописана как #data_directory = 'ConfigDir', поэтому изменения ${PGDATA} достаточно. Перезапускаю PostgreSQL. 
+Меняю `Environment=PGDATA=/var/lib/pgsql/17/data/` на `Environment=PGDATA=/mnt/data/data`, в конфиге postgresql.conf директория закомментирована и прописана как `#data_directory = 'ConfigDir'`, поэтому изменения `${PGDATA}` достаточно. Перезапускаю PostgreSQL. 
 ```
 [root@postgresql ~]# sudo systemctl restart postgresql-17
 [root@postgresql ~]# systemctl status postgresql-17.service
@@ -150,11 +135,6 @@ See "systemctl status postgresql-17.service" and "journalctl -xe" for details.
            ├─13330 postgres: walwriter
            ├─13331 postgres: autovacuum launcher
            └─13332 postgres: logical replication launcher
-
-авг 19 12:54:31 postgresql systemd[1]: Starting PostgreSQL 17 database server...
-авг 19 12:54:31 postgresql postgres[13325]: 2025-08-19 12:54:31.834 MSK [13325] СООБЩЕНИЕ:  передача вывода в протокол процессу сбора протоколов
-авг 19 12:54:31 postgresql postgres[13325]: 2025-08-19 12:54:31.834 MSK [13325] ПОДСКАЗКА:  В дальнейшем протоколы будут выводиться в каталог "log".
-авг 19 12:54:31 postgresql systemd[1]: Started PostgreSQL 17 database server.
 ```
 Всё получилось. Захожу в psql, проверяю раннее созданную таблицу:
 ```
@@ -170,3 +150,36 @@ postgres=# SELECT * FROM test;
 ```
 
 ## Задание со звёздочкой.
+
+На первой ВМ был настроен PostgreSQL 17 с данными на внешнем диске. Останавливаю PostgreSQL, размонтирую диск:
+```
+[root@postgresql ~]# systemctl stop postgresql-17
+[root@postgresql ~]# umount /mnt/data
+```
+Создаю новую ВМ с аналогичной конфигурацией, устанавливаю PostgreSQL 17, инициализирую БД:
+```
+[root@postgresql2 ~]# yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+[root@postgresql2 ~]# yum install -y postgresql17-server postgresql17-contrib
+[root@postgresql2 ~]# /usr/pgsql-17/bin/postgresql-17-setup initdb
+[root@postgresql2 ~]# systemctl stop postgresql-17
+```
+В гипервизоре подключаю существующий диск от ВМ1 к ВМ2, создаю точку монтирования `mkdir /mnt/data`, добавляю в `/etc/fstab` UUID, монтирую диск `mount -a`. Проверяю монтирование: 
+```
+[root@postgresql2 ~]# df -h /mnt/data
+Файловая система            Размер Использовано  Дост Использовано% Cмонтировано в
+/dev/sdb                      9,8G        1,2G  8,1G           13% /mnt/data
+```
+Меняю `${PGDATA}` на новой VM в конфигурационном файле `/usr/lib/systemd/system/postgresql-17.service` c `Environment=PGDATA=/var/lib/pgsql/17/data` на `Environment=PGDATA=/mnt/data/data`, настраиваю права:
+```
+[root@postgresql2 ~]# chown -R postgres:postgres /mnt/data/data
+[root@postgresql2 ~]# chmod 700 /mnt/data/data
+```
+Запускаю PostgreSQL 17, проверяю таблицу `test` с внешнего диска: 
+```
+[root@postgresql2 ~]# sudo -u postgres psql -c "SELECT * FROM test;"
+ c1 
+----
+ 1
+(1 строка)
+```
+Всё получилось. 
