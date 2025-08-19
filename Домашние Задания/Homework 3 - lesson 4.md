@@ -156,7 +156,7 @@ postgres=# SELECT * FROM test;
 [root@postgresql ~]# systemctl stop postgresql-17
 [root@postgresql ~]# umount /mnt/data
 ```
-Создаю новую ВМ с аналогичной конфигурацией, устанавливаю PostgreSQL 17, инициализирую БД, удаляю файлы с данными из `/var/lib/postgres`,останавливаю PostgreSQL:
+Создаю новую ВМ с аналогичной конфигурацией, устанавливаю PostgreSQL 17, инициализирую БД, удаляю файлы с данными из `/var/lib/postgres`, останавливаю PostgreSQL:
 ```
 [root@postgresql2 ~]# yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 [root@postgresql2 ~]# yum install -y postgresql17-server postgresql17-contrib
