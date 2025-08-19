@@ -126,21 +126,39 @@ Writing superblocks and filesystem accounting information: done
 Job for postgresql-17.service failed because the control process exited with error code.
 See "systemctl status postgresql-17.service" and "journalctl -xe" for details.
 ```
-Перенос не закончен, так как PostgreSQL ищет данные по пути, указанному в конфигурации. Иду менять конфигурационный файл postgresql.conf. Меняю
+Перенос не закончен, так как PostgreSQL ищет данные по пути, указанному в конфигурации. Иду менять конфигурационный файл postgresql-17.service:
 ```
-#data_directory = 'ConfigDir'           # use data in another directory
-                                        # (change requires restart)
-#hba_file = 'ConfigDir/pg_hba.conf'     # host-based authentication file
-                                        # (change requires restart)
-#ident_file = 'ConfigDir/pg_ident.conf' # ident configuration file
-                                        # (change requires restart)
+[root@postgresql ~]# vi /usr/lib/systemd/system/postgresql-17.service
 ```
-на 
+Меняю `Environment=PGDATA=/var/lib/pgsql/17/data/` на `Environment=PGDATA=/mnt/data/data`, в конфиге postgresql.conf директория закомментирована и прописана как #data_directory = 'ConfigDir', поэтому изменения ${PGDATA} достаточно. Перезапускаю PostgreSQL. 
 ```
-data_directory = '/mnt/data/data'               # use data in another directory
-                                                # (change requires restart)
-hba_file = '/mnt/data/data/pg_hba.conf'         # host-based authentication file
-                                                # (change requires restart)
-ident_file = '/mnt/data/data/pg_ident.conf'     # ident configuration file
+[root@postgresql ~]# sudo systemctl restart postgresql-17
+[root@postgresql ~]# systemctl status postgresql-17.service
+● postgresql-17.service - PostgreSQL 17 database server
+   Loaded: loaded (/usr/lib/systemd/system/postgresql-17.service; enabled; vendor preset: disabled)
+   Active: active (running) since Tue 2025-08-19 12:54:31 MSK; 4s ago
+     Docs: https://www.postgresql.org/docs/17/static/
+  Process: 13319 ExecStartPre=/usr/pgsql-17/bin/postgresql-17-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+ Main PID: 13325 (postgres)
+    Tasks: 7 (limit: 10359)
+   Memory: 40.1M
+   CGroup: /system.slice/postgresql-17.service
+           ├─13325 /usr/pgsql-17/bin/postgres -D /mnt/data/data
+           ├─13326 postgres: logger
+           ├─13327 postgres: checkpointer
+           ├─13328 postgres: background writer
+           ├─13330 postgres: walwriter
+           ├─13331 postgres: autovacuum launcher
+           └─13332 postgres: logical replication launcher
+
+авг 19 12:54:31 postgresql systemd[1]: Starting PostgreSQL 17 database server...
+авг 19 12:54:31 postgresql postgres[13325]: 2025-08-19 12:54:31.834 MSK [13325] СООБЩЕНИЕ:  передача вывода в протокол процессу сбора протоколов
+авг 19 12:54:31 postgresql postgres[13325]: 2025-08-19 12:54:31.834 MSK [13325] ПОДСКАЗКА:  В дальнейшем протоколы будут выводиться в каталог "log".
+авг 19 12:54:31 postgresql systemd[1]: Started PostgreSQL 17 database server.
+```
+Всё получилось. Захожу в psql, проверяю раннее созданную таблицу:
+```
 
 ```
+
+## Задание со звёздочкой.
