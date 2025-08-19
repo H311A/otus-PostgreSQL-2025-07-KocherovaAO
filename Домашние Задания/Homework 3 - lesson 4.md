@@ -83,3 +83,30 @@ sda           8:0    0   40G  0 disk
 sdb           8:16   0   10G  0 disk
 sr0          11:0    1 13,2G  0 rom
 ```
+Дальше инициализирую диск, монтирую и прописываю его в /ets/fstab:
+```
+[root@postgresql ~]# pvcreate /dev/sdb
+  Physical volume "/dev/sdb" successfully created.
+[root@postgresql ~]# vgcreate vg_data /dev/sdb
+  Volume group "vg_data" successfully created
+[root@postgresql ~]# sudo lvcreate -n lv_data -l 100%FREE vg_data
+  Logical volume "lv_data" created.
+[root@postgresql ~]# mkfs.ext4 /dev/vg_data/lv_data
+mke2fs 1.45.6 (20-Mar-2020)
+Discarding device blocks: done
+Creating filesystem with 2620416 4k blocks and 655360 inodes
+Filesystem UUID: 453e402c-7c55-4e01-a5e1-df734d3e0bc8
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (16384 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+[root@postgresql ~]# mkdir /mnt/data
+[root@postgresql ~]# mount /dev/vg_data/lv_data /mnt/data
+[root@postgresql ~]# blkid /dev/vg_data/lv_data
+/dev/vg_data/lv_data: UUID="453e402c-7c55-4e01-a5e1-df734d3e0bc8" BLOCK_SIZE="4096" TYPE="ext4"
+Добавляю строчку в fstab: UUID=453e402c-7c55-4e01-a5e1-df734d3e0bc8  /mnt/data  ext4  defaults  0  2
+```
