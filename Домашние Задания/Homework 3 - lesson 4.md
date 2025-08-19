@@ -51,7 +51,35 @@ INSERT 0 1
 postgres=# \q
 
 [root@postgresql ~]# sudo systemctl stop postgresql-17
+[root@postgresql ~]# systemctl status postgresql-17
+● postgresql-17.service - PostgreSQL 17 database server
+   Loaded: loaded (/usr/lib/systemd/system/postgresql-17.service; enabled; vendor preset: disabled)
+   Active: inactive (dead) since Tue 2025-08-19 12:25:27 MSK; 6s ago
+     Docs: https://www.postgresql.org/docs/17/static/
+  Process: 1183 ExecStart=/usr/pgsql-17/bin/postgres -D ${PGDATA} (code=exited, status=0/SUCCESS)
+  Process: 1162 ExecStartPre=/usr/pgsql-17/bin/postgresql-17-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+ Main PID: 1183 (code=exited, status=0/SUCCESS)
+
+авг 19 12:25:01 postgresql systemd[1]: Starting PostgreSQL 17 database server...
+авг 19 12:25:03 postgresql postgres[1183]: 2025-08-19 12:25:03.887 MSK [1183] СООБЩЕНИЕ:  передача вывода в протокол процессу сбора протоколов
+авг 19 12:25:03 postgresql postgres[1183]: 2025-08-19 12:25:03.887 MSK [1183] ПОДСКАЗКА:  В дальнейшем протоколы будут выводиться в каталог "log".
+авг 19 12:25:04 postgresql systemd[1]: Started PostgreSQL 17 database server.
+авг 19 12:25:27 postgresql systemd[1]: Stopping PostgreSQL 17 database server...
+авг 19 12:25:27 postgresql systemd[1]: postgresql-17.service: Killing process 1312 (postgres) with signal SIGKILL.
+авг 19 12:25:27 postgresql systemd[1]: postgresql-17.service: Succeeded.
+авг 19 12:25:27 postgresql systemd[1]: Stopped PostgreSQL 17 database server.
 ```
-Добавляю на ВМ новый диск 10гб.
+Добавляю на ВМ новый диск 10гб:
+
+![новый диск](https://github.com/H311A/otus-PostgreSQL-2025-07-KocherovaAO/raw/main/Домашние%20Задания/Скриншоты/hmwk3screen1.png)
 ```
+[root@postgresql ~]# lsblk
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda           8:0    0   40G  0 disk
+├─sda1        8:1    0   39G  0 part
+│ ├─ol-root 252:0    0   37G  0 lvm  /
+│ └─ol-swap 252:1    0  2,1G  0 lvm  [SWAP]
+└─sda2        8:2    0    1G  0 part /boot
+sdb           8:16   0   10G  0 disk
+sr0          11:0    1 13,2G  0 rom
 ```
