@@ -94,4 +94,56 @@ testdb=> SELECT * FROM testnm.t1;
   1
 (1 строка)
 ```
-Теперь все работает.
+Теперь все работает. Идём дальше, пробуем команды из домашнего задания:
+```
+testdb=> CREATE TABLE t2(c1 integer);
+ОШИБКА:  нет доступа к схеме public
+СТРОКА 1: CREATE TABLE t2(c1 integer);
+                       ^
+testdb=> INSERT INTO t2 VALUES (2);
+ОШИБКА:  отношение "t2" не существует
+СТРОКА 1: INSERT INTO t2 VALUES (2);
+```
+Схема `public` по умолчанию закрыта для создания объектов обычными пользователями. Даю право на `CREATE` в `public` для всех под `postgres`:
+```
+testdb=# GRANT CREATE ON SCHEMA public TO PUBLIC;
+GRANT
+```
+Возвращаюсь под `testread`, проверяю:
+```
+[root@postgresql data]# psql -U testread -d testdb -h localhost
+Пароль пользователя testread:
+psql (17.5)
+Введите "help", чтобы получить справку.
+
+testdb=> CREATE TABLE t2(c1 integer);
+CREATE TABLE
+testdb=> INSERT INTO t2 VALUES (2);
+INSERT 0 1
+```
+Всё получилось. Пробуем дальше по домашнему заданию:
+```
+testdb=> CREATE TABLE t3(c1 integer);
+CREATE TABLE
+testdb=> INSERT INTO t2 VALUES (2);
+INSERT 0 1
+```
+Тут тоже все успешно, так как мы явно дали права на создание таблиц в схеме `public`. Роль `readonly` не предотвратила это, потому что роли в PostgreSQL действуют по принципу "наименьших привелегий", но явно выданные права (как владельцу) имеют приоритет над ограниченными ролями. Роль только добавляет ограничения, но не отнимает существующие права. Убрать эти права можно, выполнив под `postgres`:
+```
+testdb=# REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+REVOKE
+testdb=# REVOKE ALL ON ALL TABLES IN SCHEMA public FROM testread;
+REVOKE
+```
+Проверяю:
+```
+[root@postgresql data]# psql -U testread -d testdb -h localhost
+Пароль пользователя testread:
+psql (17.5)
+Введите "help", чтобы получить справку.
+
+testdb=> CREATE TABLE t4(c1 integer);
+ОШИБКА:  нет доступа к схеме public
+СТРОКА 1: CREATE TABLE t4(c1 integer);
+```
+Теперь прав на создание таблицы нет.
