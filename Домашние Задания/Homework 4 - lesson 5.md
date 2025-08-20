@@ -63,3 +63,35 @@ CREATE TABLE
 testdb=# INSERT INTO testnm.t1 VALUES (1);
 INSERT 0 1
 ```
+Снова подключаюсь под `testread`, пробую `select * from testnm.t1;`:
+```
+[root@postgresql data]# psql -U testread -d testdb -h localhost
+Пароль пользователя testread:
+psql (17.5)
+Введите "help", чтобы получить справку.
+
+testdb=> SELECT * FROM testnm.t1;
+ОШИБКА:  нет доступа к таблице t1
+```
+Снова возникла ошибка. Ошибка возникает, потому что права `select` были выданы до создания таблицы, нужно дать права на все будущие таблицы в схеме `testnm` и на существующую таблицу:
+```
+Вы подключены к базе данных "testdb" как пользователь "postgres".
+testdb=# ALTER DEFAULT PRIVILEGES IN SCHEMA testnm GRANT SELECT ON TABLES TO readonly;
+ALTER DEFAULT PRIVILEGES
+testdb=# GRANT SELECT ON testnm.t1 TO readonly;
+GRANT
+```
+Переключаюсь обратно на пользователя `testread`, снова проверяю:
+```
+[root@postgresql data]# psql -U testread -d testdb -h localhost
+Пароль пользователя testread:
+psql (17.5)
+Введите "help", чтобы получить справку.
+
+testdb=> SELECT * FROM testnm.t1;
+ c1
+----
+  1
+(1 строка)
+```
+Теперь все работает.
