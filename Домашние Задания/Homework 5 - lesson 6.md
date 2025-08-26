@@ -1,7 +1,7 @@
 ```
 Окружение: Oracle Linux 8.10. 2 CPU 2 RAM 40 GB HDD.
 ```
-Произвожу установку PostgreSQL 17, инициализирую кластер, включаю в автозагрузку: 
+Произвожу установку PostgreSQL 17, инициализирую кластер: 
 ```
 [root@postgresql ~]# yum install -y postgresql17-server postgresql17-contrib
 Установлен:
