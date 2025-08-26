@@ -101,3 +101,7 @@ track_counts = off
 track_io_timing = off
 track_functions = 'none'
 ```
+## Перезапускаю Postgres и иду нагружать кластер через утилиту pgbench:
+```
+[root@postgresql ~]# systemctl restart postgresql-17
+```
