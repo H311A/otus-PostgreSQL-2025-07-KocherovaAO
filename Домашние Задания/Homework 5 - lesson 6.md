@@ -57,6 +57,7 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - задаю новый `effective_io_concurrency` для асинхронного I/O;
 - выключаю вообще всё, что не нужно для выполнения запросов: мониторинг, логирование, логирование времени чекпоинтов, замер времени выполнения и всякая остальная статистика;
 
+### В итоге мои настройки выглядят как:
 ```
 fsync = off
 synchronous_commit = off
