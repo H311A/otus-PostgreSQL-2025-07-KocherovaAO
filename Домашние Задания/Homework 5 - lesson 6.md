@@ -113,3 +113,65 @@ vacuuming...
 creating primary keys...
 done in 7.01 s (drop tables 1.13 s, create tables 0.17 s, client-side generate 3.98 s, vacuum 0.37 s, primary keys 1.36 s).
 ```
+Результаты теста на 16 клиентов: 
+```
+[root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 16 -j 2 -T 60 -P 5 pgbench_test
+pgbench (17.6)
+starting vacuum...end.
+progress: 5.0 s, 896.6 tps, lat 17.211 ms stddev 11.107, 0 failed
+progress: 10.0 s, 913.4 tps, lat 17.481 ms stddev 12.234, 0 failed
+progress: 15.0 s, 793.3 tps, lat 20.071 ms stddev 15.032, 0 failed
+progress: 20.0 s, 870.2 tps, lat 18.201 ms stddev 12.402, 0 failed
+progress: 25.0 s, 796.4 tps, lat 20.113 ms stddev 16.539, 0 failed
+progress: 30.0 s, 715.6 tps, lat 22.292 ms stddev 20.112, 0 failed
+progress: 35.0 s, 831.2 tps, lat 19.105 ms stddev 14.947, 0 failed
+progress: 40.0 s, 933.6 tps, lat 17.079 ms stddev 12.577, 0 failed
+progress: 45.0 s, 853.5 tps, lat 18.649 ms stddev 13.999, 0 failed
+progress: 50.0 s, 973.0 tps, lat 16.358 ms stddev 12.099, 0 failed
+progress: 55.0 s, 919.4 tps, lat 17.313 ms stddev 13.900, 0 failed
+progress: 60.0 s, 1048.4 tps, lat 15.189 ms stddev 10.979, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 16
+number of threads: 2
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 52736
+number of failed transactions: 0 (0.000%)
+latency average = 18.094 ms
+latency stddev = 13.981 ms
+initial connection time = 130.014 ms
+tps = 878.628888 (without initial connection time)
+```
+Результаты тестов только read-only:
+```
+[root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 16 -j 2 -T 60 -P 5 -S pgbench_test
+pgbench (17.6)
+starting vacuum...end.
+progress: 5.0 s, 5328.8 tps, lat 2.828 ms stddev 4.755, 0 failed
+progress: 10.0 s, 6743.1 tps, lat 2.286 ms stddev 2.635, 0 failed
+progress: 15.0 s, 5660.2 tps, lat 2.702 ms stddev 3.951, 0 failed
+progress: 20.0 s, 4674.0 tps, lat 3.254 ms stddev 5.744, 0 failed
+progress: 25.0 s, 5568.7 tps, lat 2.790 ms stddev 4.880, 0 failed
+progress: 30.0 s, 6311.1 tps, lat 2.421 ms stddev 3.188, 0 failed
+progress: 35.0 s, 6227.6 tps, lat 2.476 ms stddev 3.477, 0 failed
+progress: 40.0 s, 6472.9 tps, lat 2.364 ms stddev 2.694, 0 failed
+progress: 45.0 s, 6547.8 tps, lat 2.333 ms stddev 2.482, 0 failed
+progress: 50.0 s, 5577.9 tps, lat 2.741 ms stddev 3.995, 0 failed
+progress: 55.0 s, 5178.5 tps, lat 2.958 ms stddev 3.983, 0 failed
+progress: 60.0 s, 5628.1 tps, lat 2.718 ms stddev 3.453, 0 failed
+transaction type: <builtin: select only>
+scaling factor: 10
+query mode: simple
+number of clients: 16
+number of threads: 2
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 349621
+number of failed transactions: 0 (0.000%)
+latency average = 2.628 ms
+latency stddev = 3.811 ms
+initial connection time = 112.759 ms
+tps = 5826.448782 (without initial connection time)
+```
