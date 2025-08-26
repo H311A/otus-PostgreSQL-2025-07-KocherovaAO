@@ -207,3 +207,7 @@ initial connection time = 112.759 ms
 tps = 5826.448782 (without initial connection time)
 ```
 ## Задача со звёздочкой:
+Устанавливаю sysbench, sysbench-tpcc:
+```
+
+```
