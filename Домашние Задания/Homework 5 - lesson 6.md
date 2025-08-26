@@ -46,6 +46,9 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - и растягиваю `checkpoint` почти на все время между чекпоинтами;
 - задаю новый `max_wal_size`, чтобы позволить накопиться большему объему WAL перед принудительным чекпоинтом;
 - и задаю новый минимальный размер `min_wal_size`;
+- устанавливаю агрессивные значения для моих характеристик для `max_parallel_workers_per_gather`, пытаясь выжать максимум;
+- оставляю `max_worker_processes`, `max_parallel_workers ` стандартными;
+
 
 ```
 fsync = off
@@ -66,4 +69,9 @@ checkpoint_timeout = 1h
 checkpoint_completion_target = 0.99
 max_wal_size = 4GB
 min_wal_size = 1GB
+max_worker_processes = 8                
+max_parallel_workers_per_gather = 4     
+max_parallel_maintenance_workers = 4    
+max_parallel_workers = 8
+parallel_leader_participation = off
 ```
