@@ -207,7 +207,8 @@ initial connection time = 112.759 ms
 tps = 5826.448782 (without initial connection time)
 ```
 ## Задача со звёздочкой:
-Устанавливаю sysbench, sysbench-tpcc:
+Устанавливаю sysbench, sysbench-tpcc, создаю базу для теста:
 ```
-
+[root@postgresql sysbench-tpcc-master]# sudo -u postgres createdb tpcc_test
+[root@postgresql sysbench-tpcc-master]# sysbench tpcc.lua --pgsql-db=tpcc_test --pgsql-user=postgresс --time=600 --threads=4 --report-interval=30  --tables=1 --scale=10 --db-driver=pgsql prepare
 ```
