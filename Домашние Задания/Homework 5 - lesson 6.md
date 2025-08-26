@@ -144,7 +144,7 @@ latency stddev = 13.981 ms
 initial connection time = 130.014 ms
 tps = 878.628888 (without initial connection time)
 ```
-Результаты тестов на 32 клиента:
+Результаты теста на 32 клиента:
 ```
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 32 -j 2 -T 60 -P 5 -M prepared pgbench_test
 pgbench (17.6)
@@ -175,7 +175,7 @@ latency stddev = 34.855 ms
 initial connection time = 471.163 ms
 tps = 782.732710 (without initial connection time)
 ```
-Результаты тестов только read-only:
+Результаты теста только read-only:
 ```
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 16 -j 2 -T 60 -P 5 -S pgbench_test
 pgbench (17.6)
