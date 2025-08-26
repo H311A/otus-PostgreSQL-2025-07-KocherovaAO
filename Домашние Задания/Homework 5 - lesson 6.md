@@ -1,7 +1,7 @@
 ```
 Окружение: Oracle Linux 8.10. 2 CPU 2 RAM 40 GB HDD.
 ```
-Произвожу установку PostgreSQL 17, инициализирую кластер: 
+## Произвожу установку PostgreSQL 17, инициализирую кластер: 
 ```
 [root@postgresql ~]# yum install -y postgresql17-server postgresql17-contrib
 Установлен:
@@ -29,7 +29,7 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
            ├─4346 postgres: autovacuum launcher
            └─4347 postgres: logical replication launcher
 ```
-Настраиваю кластер на максимальную производительность: 
+## Настраиваю кластер на максимальную производительность: 
 - выключаю `fsync`, чтобы Postgres не ждал записи на диск;
 - выключаю `synchronous_commit`, чтобы убрать задержки подтверждения операций;
 - выключаю `full_page_writes`, чтобы убрать избыточную запись страниц;
