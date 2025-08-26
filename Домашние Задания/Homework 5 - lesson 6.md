@@ -37,15 +37,33 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - задаю 512MB объёму памяти для операций обслуживания базы данных, чтобы ускорить обслуживание БД;
 - даю оставшийся объём для кэширования данных (`effective_cache_size`);
 - увеличиваю временные буферы;
+- увеличиваю буфер WAL;
+- устанавливаю WAL writer на запись раз в 10 секунд;
+- и устанавливаю, чтобы он сбрасывал данные на диск только при накоплении 4MB;
+- группирую коммиты, чтобы уменьшить количество дисковых операций;
+- устанавливаю `commit_siblings`, чтобы копилось 10 транзакций для групповой записи;
+- устанавливаю `checkpoint` на раз в час, чтобы уменьшить нагрузку на диск;
+- и растягиваю `checkpoint` почти на все время между чекпоинтами;
+- задаю новый `max_wal_size`, чтобы позволить накопиться большему объему WAL перед принудительным чекпоинтом;
+- и задаю новый минимальный размер `min_wal_size`;
 
 ```
 fsync = off
 synchronous_commit = off
 full_page_writes = off
-
 shared_buffers = 1GB
 work_mem = 32MB
 maintenance_work_mem = 512MB
 effective_cache_size = 1GB
 temp_buffers = 64MB
+wal_buffers = 16MB
+wal_writer_delay = 10000ms
+wal_writer_flush_after = 4MB
+commit_delay = 10000
+commit_siblings = 10
+checkpoint_timeout = 1h
+checkpoint_timeout = 1h
+checkpoint_completion_target = 0.99
+max_wal_size = 4GB
+min_wal_size = 1GB
 ```
