@@ -101,7 +101,15 @@ track_counts = off
 track_io_timing = off
 track_functions = 'none'
 ```
-## Перезапускаю Postgres и иду нагружать кластер через утилиту pgbench:
+## Перезапускаю Postgres, создаю тестовую таблицу и иду нагружать кластер через утилиту pgbench:
 ```
 [root@postgresql ~]# systemctl restart postgresql-17
+[root@postgresql ~]# sudo -u postgres createdb pgbench_test
+[root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -i -s 10 pgbench_test
+dropping old tables...
+creating tables...
+generating data (client-side)...
+vacuuming...
+creating primary keys...
+done in 7.01 s (drop tables 1.13 s, create tables 0.17 s, client-side generate 3.98 s, vacuum 0.37 s, primary keys 1.36 s).
 ```
