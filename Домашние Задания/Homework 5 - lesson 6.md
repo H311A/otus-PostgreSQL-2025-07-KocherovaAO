@@ -29,3 +29,23 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
            ├─4346 postgres: autovacuum launcher
            └─4347 postgres: logical replication launcher
 ```
+Настраиваю кластер на максимальную производительность: 
+- выключаю `fsync`, чтобы Postgres не ждал записи на диск;
+- выключаю `synchronous_commit`, чтобы убрать задержки подтверждения операций;
+- выключаю `full_page_writes`, чтобы убрать избыточную запись страниц;
+- даю буферу максимально возможный объем для моих 2 RAM - 50%;
+- задаю 512MB объёму памяти для операций обслуживания базы данных, чтобы ускорить обслуживание БД;
+- даю оставшийся объём для кэширования данных (`effective_cache_size`);
+- увеличиваю временные буферы;
+
+```
+fsync = off
+synchronous_commit = off
+full_page_writes = off
+
+shared_buffers = 1GB
+work_mem = 32MB
+maintenance_work_mem = 512MB
+effective_cache_size = 1GB
+temp_buffers = 64MB
+```
