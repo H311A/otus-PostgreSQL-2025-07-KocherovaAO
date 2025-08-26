@@ -1,1 +1,31 @@
-
+```
+Окружение: Oracle Linux 8.10. 2 CPU 2 RAM 40 GB HDD.
+```
+Произвожу установку PostgreSQL 17, инициализирую кластер, включаю в автозагрузку: 
+```
+[root@postgresql ~]# yum install -y postgresql17-server postgresql17-contrib
+Установлен:
+  postgresql17-contrib-17.6-1PGDG.rhel8.x86_64                                   postgresql17-server-17.6-1PGDG.rhel8.x86_64
+[root@postgresql ~]# /usr/pgsql-17/bin/postgresql-17-setup initdb
+Initializing database ... OK
+[root@postgresql ~]# systemctl enable postgresql-17
+Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.service → /usr/lib/systemd/system/postgresql-17.service.
+[root@postgresql ~]# systemctl start postgresql-17
+[root@postgresql ~]# systemctl status postgresql-17
+● postgresql-17.service - PostgreSQL 17 database server
+   Loaded: loaded (/usr/lib/systemd/system/postgresql-17.service; enabled; vendor preset: disabled)
+   Active: active (running) since Tue 2025-08-26 15:31:22 MSK; 11s ago
+     Docs: https://www.postgresql.org/docs/17/static/
+  Process: 4334 ExecStartPre=/usr/pgsql-17/bin/postgresql-17-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+ Main PID: 4339 (postgres)
+    Tasks: 7 (limit: 10359)
+   Memory: 17.9M
+   CGroup: /system.slice/postgresql-17.service
+           ├─4339 /usr/pgsql-17/bin/postgres -D /var/lib/pgsql/17/data/
+           ├─4341 postgres: logger
+           ├─4342 postgres: checkpointer
+           ├─4343 postgres: background writer
+           ├─4345 postgres: walwriter
+           ├─4346 postgres: autovacuum launcher
+           └─4347 postgres: logical replication launcher
+```
