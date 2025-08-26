@@ -55,7 +55,7 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - увеличиваю `max_parallel_maintenance_workers`;
 - задаю `random_page_cost` минимальное значение, чтобы планировщик думал, что random I/O почти бесплатен;
 - задаю новый `effective_io_concurrency` для асинхронного I/O;
-- выключаю вообще всё, что не нужно для выполнения запросов: мониторинг, логирование, сбор статистики.
+- выключаю вообще всё, что не нужно для выполнения запросов: мониторинг, логирование, логирование времени чекпоинтов, замер времени выполнения и всякая остальная статистика;
 
 ```
 fsync = off
@@ -89,6 +89,14 @@ random_page_cost = 1.0
 effective_io_concurrency = 256
 log_statement = 'none'
 log_duration = off
+log_lock_waits = off
+log_temp_files = -1
+log_checkpoints = off
+log_connections = off
+log_disconnections = off
+log_line_prefix = ''
 track_activities = off
 track_counts = off
+track_io_timing = off
+track_functions = 'none'
 ```
