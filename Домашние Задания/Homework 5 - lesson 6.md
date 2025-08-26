@@ -101,7 +101,7 @@ track_counts = off
 track_io_timing = off
 track_functions = 'none'
 ```
-## Перезапускаю Postgres, создаю тестовую таблицу и иду нагружать кластер через утилиту pgbench:
+## Перезапускаю Postgres, создаю тестовую таблицу с масштабом 10 (~1.5GB) и иду нагружать кластер через утилиту pgbench:
 ```
 [root@postgresql ~]# systemctl restart postgresql-17
 [root@postgresql ~]# sudo -u postgres createdb pgbench_test
@@ -144,6 +144,37 @@ latency stddev = 13.981 ms
 initial connection time = 130.014 ms
 tps = 878.628888 (without initial connection time)
 ```
+Результаты тестов на 32 клиента:
+```
+[root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 32 -j 2 -T 60 -P 5 -M prepared pgbench_test
+pgbench (17.6)
+starting vacuum...end.
+progress: 5.0 s, 816.6 tps, lat 34.922 ms stddev 31.858, 0 failed
+progress: 10.0 s, 1035.9 tps, lat 30.910 ms stddev 21.820, 0 failed
+progress: 15.0 s, 981.5 tps, lat 32.491 ms stddev 22.954, 0 failed
+progress: 20.0 s, 743.1 tps, lat 42.751 ms stddev 34.738, 0 failed
+progress: 25.0 s, 741.3 tps, lat 42.892 ms stddev 40.798, 0 failed
+progress: 30.0 s, 843.0 tps, lat 37.942 ms stddev 30.426, 0 failed
+progress: 35.0 s, 833.4 tps, lat 38.116 ms stddev 35.272, 0 failed
+progress: 40.0 s, 652.7 tps, lat 48.884 ms stddev 36.484, 0 failed
+progress: 45.0 s, 713.2 tps, lat 44.677 ms stddev 34.288, 0 failed
+progress: 50.0 s, 670.0 tps, lat 47.392 ms stddev 37.319, 0 failed
+progress: 55.0 s, 607.2 tps, lat 52.259 ms stddev 46.211, 0 failed
+progress: 60.0 s, 723.8 tps, lat 44.199 ms stddev 38.926, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: prepared
+number of clients: 32
+number of threads: 2
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 46841
+number of failed transactions: 0 (0.000%)
+latency average = 40.572 ms
+latency stddev = 34.855 ms
+initial connection time = 471.163 ms
+tps = 782.732710 (without initial connection time)
+```
 Результаты тестов только read-only:
 ```
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -c 16 -j 2 -T 60 -P 5 -S pgbench_test
@@ -175,3 +206,4 @@ latency stddev = 3.811 ms
 initial connection time = 112.759 ms
 tps = 5826.448782 (without initial connection time)
 ```
+## Задача со звёздочкой:
