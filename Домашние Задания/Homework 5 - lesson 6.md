@@ -44,6 +44,10 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - устанавливаю `commit_siblings`, чтобы копилось 10 транзакций для групповой записи;
 - устанавливаю `checkpoint` на раз в час, чтобы уменьшить нагрузку на диск;
 - и растягиваю `checkpoint` почти на все время между чекпоинтами;
+- включаю `enable_parallel_append`, чтобы UNION запросы делались в несколько потоков вместо одного;
+- включаю `enable_parallel_hash`, чтобы JOIN с большими таблицами делался быстрее;
+- включаю `enable_partitionwise_join`, чтобы JOIN делался между частями параллельно, если таблицы разделены на части; 
+- включаю `enable_partitionwise_aggregate`, чтобы SUM/COUNT по частям таблиц считались параллельно;
 - задаю новый `max_wal_size`, чтобы позволить накопиться большему объему WAL перед принудительным чекпоинтом;
 - и задаю новый минимальный размер `min_wal_size`;
 - устанавливаю агрессивные значения для моих характеристик для `max_parallel_workers_per_gather`, пытаясь выжать максимум;
@@ -70,6 +74,10 @@ commit_siblings = 10
 checkpoint_timeout = 1h
 checkpoint_timeout = 1h
 checkpoint_completion_target = 0.99
+enable_parallel_append = on
+enable_parallel_hash = on
+enable_partitionwise_join = on
+enable_partitionwise_aggregate = on
 max_wal_size = 4GB
 min_wal_size = 1GB
 max_worker_processes = 8                
