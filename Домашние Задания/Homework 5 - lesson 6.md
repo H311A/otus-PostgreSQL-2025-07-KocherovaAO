@@ -48,7 +48,10 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
 - и задаю новый минимальный размер `min_wal_size`;
 - устанавливаю агрессивные значения для моих характеристик для `max_parallel_workers_per_gather`, пытаясь выжать максимум;
 - оставляю `max_worker_processes`, `max_parallel_workers ` стандартными;
-
+- увеличиваю `max_parallel_maintenance_workers`;
+- задаю `random_page_cost` минимальное значение, чтобы планировщик думал, что random I/O почти бесплатен;
+- задаю новый `effective_io_concurrency` для асинхронного I/O;
+- выключаю вообще всё, что не нужно для выполнения запросов: мониторинг, логирование, сбор статистики.
 
 ```
 fsync = off
@@ -74,4 +77,10 @@ max_parallel_workers_per_gather = 4
 max_parallel_maintenance_workers = 4    
 max_parallel_workers = 8
 parallel_leader_participation = off
+random_page_cost = 1.0
+effective_io_concurrency = 256
+log_statement = 'none'
+log_duration = off
+track_activities = off
+track_counts = off
 ```
