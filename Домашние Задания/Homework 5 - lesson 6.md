@@ -29,7 +29,7 @@ Created symlink /etc/systemd/system/multi-user.target.wants/postgresql-17.servic
            ├─4346 postgres: autovacuum launcher
            └─4347 postgres: logical replication launcher
 ```
-## Настраиваю кластер на максимальную производительность: 
+## Настраиваю кластер на максимальную производительность. По моим экспериментам максимальные TPS на 2 RAM 2 CPU дали следующие настройки: 
 - выключаю `fsync`, чтобы Postgres не ждал записи на диск;
 - выключаю `synchronous_commit`, чтобы убрать задержки подтверждения операций;
 - выключаю `full_page_writes`, чтобы убрать избыточную запись страниц, не будем писать лишние данные;
@@ -72,7 +72,6 @@ wal_writer_delay = 10000ms
 wal_writer_flush_after = 4MB
 commit_delay = 10000
 commit_siblings = 10
-checkpoint_timeout = 1h
 checkpoint_timeout = 1h
 checkpoint_completion_target = 0.99
 enable_parallel_append = on
@@ -205,10 +204,4 @@ latency average = 2.628 ms
 latency stddev = 3.811 ms
 initial connection time = 112.759 ms
 tps = 5826.448782 (without initial connection time)
-```
-## Задача со звёздочкой:
-Устанавливаю sysbench, sysbench-tpcc, создаю базу для теста:
-```
-[root@postgresql sysbench-tpcc-master]# sudo -u postgres createdb tpcc_test
-[root@postgresql sysbench-tpcc-master]# sysbench tpcc.lua --pgsql-db=tpcc_test --pgsql-user=postgresс --time=600 --threads=4 --report-interval=30  --tables=1 --scale=10 --db-driver=pgsql prepare
 ```
