@@ -118,3 +118,25 @@ postgres=# SELECT pg_size_pretty(pg_total_relation_size('test_table'));
  87 MB
 (1 строка)
 ```
+5 раз обновляю все строчки и добавляю к каждой строчке символ. Смотрю количество мертвых строчек в таблице, и когда последний раз приходил автовакуум:
+```
+postgres=# DO $$
+postgres$# BEGIN
+postgres$#     FOR i IN 1..5 LOOP
+postgres$#         UPDATE test_table SET text_data = text_data || 'X';
+postgres$#     END LOOP;
+postgres$# END $$;
+DO
+
+postgres=# SELECT n_dead_tup, last_autovacuum
+postgres-# FROM pg_stat_user_tables
+postgres-# WHERE relname = 'test_table';
+ n_dead_tup |        last_autovacuum
+------------+-------------------------------
+    5000000 | 2025-08-29 13:50:19.030668+03
+(1 строка)
+```
+Жду некоторое время, переодически проверяя, произошёл ли автовакуум:
+```
+
+```
