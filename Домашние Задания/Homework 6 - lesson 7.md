@@ -103,7 +103,7 @@ initial connection time = 72.786 ms
 tps = 438.150439 (without initial connection time)
 ```
 После применения новых параметров конфигурации производительность PostgreSQL улучшилась: количество транзакций в секунду увеличилось, средняя задержка уменьшилась, а стабильность работы повысилась (снижение стандартного отклонения задержки). Это произошло благодаря оптимизации использования оперативной памяти (увеличение shared_buffers и work_mem), более эффективной работе с WAL (настройка размеров и контрольных точек) и улучшению планирования запросов за счет точной статистики.<br/>
-Создаю новую таблицу с текстовым полем, заполняю данными и смотрю её размер:
+Создаю новую таблицу с текстовым полем, заполняю данными и смотрю размер файла с таблицей:
 ```
 postgres=# CREATE TABLE test_table (id serial PRIMARY KEY, text_data text);
 CREATE TABLE
@@ -138,5 +138,50 @@ postgres-# WHERE relname = 'test_table';
 ```
 Жду некоторое время, переодически проверяя, произошёл ли автовакуум:
 ```
-
+postgres=# SELECT n_dead_tup, last_autovacuum
+FROM pg_stat_user_tables
+WHERE relname = 'test_table';
+ n_dead_tup |        last_autovacuum
+------------+-------------------------------
+          0 | 2025-08-29 13:56:30.628072+03
 ```
+Теперь снова обновляю 5 раз строчки с добавлением символа, смотрю размер файла с таблицей:
+```
+postgres=# DO $$
+postgres$# BEGIN
+postgres$#     FOR i IN 1..5 LOOP
+postgres$#         UPDATE test_table SET text_data = text_data || 'Y';
+postgres$#     END LOOP;
+postgres$# END $$;
+DO
+
+postgres=# SELECT pg_size_pretty(pg_total_relation_size('test_table'));
+ pg_size_pretty
+----------------
+ 524 MB
+(1 строка)
+```
+Теперь отключаю автовакуум на своей таблице, 10 раз обновляю все строчки с добавлением к каждой строчке символа, и смотрю размер файла с таблицей:
+```
+postgres=# ALTER TABLE test_table SET (autovacuum_enabled = false);
+ALTER TABLE
+postgres=# DO $$
+postgres$# BEGIN
+postgres$#     FOR i IN 1..10 LOOP
+postgres$#         UPDATE test_table SET text_data = text_data || 'Z';
+postgres$#     END LOOP;
+postgres$# END $$;
+DO
+
+postgres=# SELECT pg_size_pretty(pg_total_relation_size('test_table'));
+ pg_size_pretty
+----------------
+ 1008 MB
+(1 строка)
+```
+При отключенном автовакууме размер таблицы значительно увеличился, так как PostgreSQL не очищал мертвые строки. Каждое обновление создавало новые версии строк, а старые оставались в таблице, занимая место. Автовакуум автоматически удаляет эти мертвые строки, возвращая пространство для повторного использования. Включаю автовакуум обратно:
+```
+postgres=# ALTER TABLE test_table SET (autovacuum_enabled = true);
+ALTER TABLE
+```
+## Задача со звёздочкой.
