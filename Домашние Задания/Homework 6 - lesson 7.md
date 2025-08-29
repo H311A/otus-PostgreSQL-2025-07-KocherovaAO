@@ -185,3 +185,29 @@ postgres=# ALTER TABLE test_table SET (autovacuum_enabled = true);
 ALTER TABLE
 ```
 ## Задача со звёздочкой.
+```
+
+postgres=# DO $$
+postgres$# DECLARE
+postgres$#     i INTEGER;
+postgres$#     table_size TEXT;
+postgres$# BEGIN
+postgres$#     FOR i IN 1..10 LOOP
+postgres$#         UPDATE test_table SET text_data = text_data || 'U';
+postgres$#         SELECT pg_size_pretty(pg_total_relation_size('test_table')) INTO table_size;
+postgres$#         RAISE NOTICE 'Шаг цикла: %, Размер таблицы: %', i, table_size;
+postgres$#         PERFORM pg_sleep(1);
+postgres$#     END LOOP;
+postgres$# END $$;
+ЗАМЕЧАНИЕ:  Шаг цикла: 1, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 2, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 3, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 4, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 5, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 6, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 7, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 8, Размер таблицы: 1008 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 9, Размер таблицы: 1032 MB
+ЗАМЕЧАНИЕ:  Шаг цикла: 10, Размер таблицы: 1128 MB
+DO
+```
