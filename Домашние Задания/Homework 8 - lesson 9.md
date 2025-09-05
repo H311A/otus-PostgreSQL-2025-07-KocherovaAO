@@ -88,7 +88,7 @@ postgres=# SHOW deadlock_timeout;
  200ms
 (1 строка)
 ```
-### Воспроизвожу ситуацию с длительной блокировкой:
+#### Воспроизвожу ситуацию с длительной блокировкой:
 Сеанс 1:
 ```
 postgres=# CREATE TABLE test_locks (id SERIAL PRIMARY KEY, value INTEGER);
@@ -110,3 +110,80 @@ postgres=*# UPDATE test_locks SET value = value + 10 WHERE id = 1;
 ```
 2025-09-05 12:58:21.590 MSK [56771] СООБЩЕНИЕ:  процесс 56771 продолжает ожидать в режиме ShareLock блокировку "транзакция 273521" в течение 201.017 мс
 ```
+### Три команды UPDATE.
+Создаю представление для удобного представления блокировок:
+```
+CREATE VIEW locks_v AS
+SELECT pid,
+       locktype,
+       CASE locktype
+         WHEN 'relation' THEN relation::regclass::text
+         WHEN 'transactionid' THEN transactionid::text
+         WHEN 'tuple' THEN relation::regclass::text||':'||tuple::text
+       END AS lockid,
+       mode,
+       granted
+FROM pg_locks
+WHERE locktype in ('relation','transactionid','tuple');
+```
+Сеанс 1:
+```
+postgres=# BEGIN;
+BEGIN
+postgres=*# UPDATE test_locks SET value = 111 WHERE id = 1;
+UPDATE 1
+```
+Сеанс 2:
+```
+postgres=# BEGIN;
+BEGIN
+postgres=*# UPDATE test_locks SET value = 222 WHERE id = 1;
+```
+Сеанс 3:
+```
+postgres=# BEGIN;
+BEGIN
+postgres=*# UPDATE test_locks SET value = 333 WHERE id = 1;
+```
+В четвертой сессии выполняю `SELECT * FROM locks_v ORDER BY pid, granted;`
+```
+postgres=# SELECT * FROM locks_v ORDER BY pid, granted;
+  pid  |   locktype    |     lockid      |       mode       | granted
+-------+---------------+-----------------+------------------+---------
+ 59432 | relation      | test_locks_pkey | RowExclusiveLock | t
+ 59432 | relation      | test_locks      | RowExclusiveLock | t
+ 59432 | transactionid | 273523          | ExclusiveLock    | t
+ 59675 | transactionid | 273523          | ShareLock        | f
+ 59675 | relation      | test_locks_pkey | RowExclusiveLock | t
+ 59675 | tuple         | test_locks:1    | ExclusiveLock    | t
+ 59675 | transactionid | 273524          | ExclusiveLock    | t
+ 59675 | relation      | test_locks      | RowExclusiveLock | t
+ 60031 | tuple         | test_locks:1    | ExclusiveLock    | f
+ 60031 | relation      | test_locks_pkey | RowExclusiveLock | t
+ 60031 | transactionid | 273525          | ExclusiveLock    | t
+ 60031 | relation      | test_locks      | RowExclusiveLock | t
+ 60661 | relation      | pg_locks        | AccessShareLock  | t
+ 60661 | relation      | locks_v         | AccessShareLock  | t
+(14 строк)
+```
+pid 59432 (первая транзакция):
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса для изменения данных;
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы для изменения данных;
+`transactionid | 273523 | ExclusiveLock | t` - блокировка ID своей транзакции.
+  
+pid 59675 (вторая транзакция, ждет первую):
+`transactionid | 273523 | ShareLock | f` - ожидает завершения транзакции 273523 (первой);
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;
+`tuple | test_locks:1 | ExclusiveLock | t` - блокировка версии строки (держит место в очереди);
+`transactionid | 273524 | ExclusiveLock | t` - блокировка ID своей транзакции;
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.
+  
+pid 60031 (третья транзакция, ждет вторую):
+`tuple | test_locks:1 | ExclusiveLock | f` - ожидает освобождения версии строки (её держит вторая транзакция);
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;
+`transactionid | 273525 | ExclusiveLock | t` - блокировка ID своей транзакции;
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.
+  
+pid 60661 (служебная сессия):
+`relation | pg_locks | AccessShareLock | t` - блокировка для чтения системной таблицы;
+`relation | locks_v | AccessShareLock | t` - блокировка для чтения представления.
