@@ -6,7 +6,7 @@
 Настраиваю выполнение контрольной точки раз в 30 секунд: `checkpoint_timeout = 30s`;  
 Перезагружаю сервер, чтобы применить изменения: `sudo systemctl restart postgresql-17`.  
 
-### Cоздаю новую базу `test_db`, измеряю до теста текущую позицию WAL:
+#### Cоздаю новую базу `test_db`, измеряю до теста текущую позицию WAL:
 ```
 [root@postgresql ~]# sudo -u postgres createdb test_db
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -i test_db
@@ -21,7 +21,7 @@ done in 0.70 s (drop tables 0.02 s, create tables 0.01 s, client-side generate 0
 [root@postgresql test_pg]# cat before_lsn.txt
 0/3271250
 ```
-### Запускаю нагрузку на 10 минут: 
+#### Запускаю нагрузку на 10 минут: 
 ```
 [root@postgresql test_pg]# sudo -u postgres /usr/pgsql-17/bin/pgbench -T 600 test_db
 pgbench (17.6)
@@ -39,7 +39,7 @@ latency average = 2.874 ms
 initial connection time = 13.878 ms
 tps = 347.990686 (without initial connection time)
 ```
-### Замеряю объем WAL после теста и вычисляю разницу:
+#### Замеряю объем WAL после теста и вычисляю разницу:
 ```
 [root@postgresql test_pg]# sudo -u postgres psql -t -A -c "SELECT pg_current_wal_lsn();" > after_lsn.txt
 [root@postgresql test_pg]# cat after_lsn.txt
@@ -55,7 +55,7 @@ tps = 347.990686 (without initial connection time)
 За 10 минут (600 секунд) при `checkpoint_timeout = 30s` должно быть примерно: `600 / 30 = 20` контрольных точек;  
 Объем на одну точку: `130914728 / 20 ≈ 6 545 736 байт (≈6.24 MB)` на контрольную точку.
 
-### Проверяю статистику контрольных точек из логов:
+#### Проверяю статистику контрольных точек из логов:
 ```
 2025-09-05 11:08:25.907 MSK [12348] СООБЩЕНИЕ:  начата контрольная точка: time
 2025-09-05 11:08:29.433 MSK [12348] СООБЩЕНИЕ:  контрольная точка завершена: записано буферов: 38 (0.2%); добавлено файлов WAL 0, удалено: 0, переработано: 0; запись=3.517 сек., синхр.=0.002 сек., всего=3.526 сек.; синхронизировано_файлов=11, самая_долгая_синхр.=0.001 сек., средняя=0.001 сек.; расстояние=197 kB, ожидалось=197 kB; lsn=0/1567EE0, lsn redo=0/1567E88
