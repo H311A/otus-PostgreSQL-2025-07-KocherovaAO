@@ -97,4 +97,17 @@ ALTER SYSTEM
 [root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pgbench -T 60 test_db
 pgbench (17.6)
 starting vacuum...end.
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 40304
+number of failed transactions: 0 (0.000%)
+latency average = 1.488 ms
+initial connection time = 11.526 ms
+tps = 671.853987 (without initial connection time)
 ```
+В асинхронном режиме TPS выше, так как транзакции не ждут подтверждения записи на диск.
