@@ -166,24 +166,24 @@ postgres=# SELECT * FROM locks_v ORDER BY pid, granted;
  60661 | relation      | locks_v         | AccessShareLock  | t
 (14 строк)
 ```
-pid 59432 (первая транзакция):
-`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса для изменения данных;
-`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы для изменения данных;
-`transactionid | 273523 | ExclusiveLock | t` - блокировка ID своей транзакции.
+pid 59432 (первая транзакция):  
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса для изменения данных;  
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы для изменения данных;  
+`transactionid | 273523 | ExclusiveLock | t` - блокировка ID своей транзакции.  
   
-pid 59675 (вторая транзакция, ждет первую):
-`transactionid | 273523 | ShareLock | f` - ожидает завершения транзакции 273523 (первой);
-`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;
-`tuple | test_locks:1 | ExclusiveLock | t` - блокировка версии строки (держит место в очереди);
-`transactionid | 273524 | ExclusiveLock | t` - блокировка ID своей транзакции;
-`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.
+pid 59675 (вторая транзакция, ждет первую):  
+`transactionid | 273523 | ShareLock | f` - ожидает завершения транзакции 273523 (первой);  
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;  
+`tuple | test_locks:1 | ExclusiveLock | t` - блокировка версии строки (держит место в очереди);  
+`transactionid | 273524 | ExclusiveLock | t` - блокировка ID своей транзакции;  
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.  
   
-pid 60031 (третья транзакция, ждет вторую):
-`tuple | test_locks:1 | ExclusiveLock | f` - ожидает освобождения версии строки (её держит вторая транзакция);
-`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;
-`transactionid | 273525 | ExclusiveLock | t` - блокировка ID своей транзакции;
-`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.
+pid 60031 (третья транзакция, ждет вторую):  
+`tuple | test_locks:1 | ExclusiveLock | f` - ожидает освобождения версии строки (её держит вторая транзакция);  
+`relation | test_locks_pkey | RowExclusiveLock | t` - блокировка индекса;  
+`transactionid | 273525 | ExclusiveLock | t` - блокировка ID своей транзакции;  
+`relation | test_locks | RowExclusiveLock | t` - блокировка таблицы.  
   
-pid 60661 (служебная сессия):
-`relation | pg_locks | AccessShareLock | t` - блокировка для чтения системной таблицы;
-`relation | locks_v | AccessShareLock | t` - блокировка для чтения представления.
+pid 60661 (служебная сессия):  
+`relation | pg_locks | AccessShareLock | t` - блокировка для чтения системной таблицы;  
+`relation | locks_v | AccessShareLock | t` - блокировка для чтения представления.  
