@@ -2,7 +2,7 @@
 Окружение: Oracle Linux 8.10.
 ```
 # Механизм блокировок.
-#### Настройка логирования длительных блокировок.
+### Настройка логирования длительных блокировок.
 Проверяю текущие настройки:
 ```
 postgres=# SELECT name, setting, unit FROM pg_settings WHERE name LIKE '%lock%' OR name LIKE '%deadlock%' OR name LIKE '%log%';
@@ -88,7 +88,7 @@ postgres=# SHOW deadlock_timeout;
  200ms
 (1 строка)
 ```
-#### Воспроизвожу ситуацию с длительной блокировкой:
+### Воспроизвожу ситуацию с длительной блокировкой:
 Сеанс 1:
 ```
 postgres=# CREATE TABLE test_locks (id SERIAL PRIMARY KEY, value INTEGER);
