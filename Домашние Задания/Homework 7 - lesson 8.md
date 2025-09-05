@@ -158,8 +158,41 @@ INSERT 0 2
 ````
 #### Останавливаю кластер, меняю пару байт в таблице:
 ```
+[root@postgresql log]# sudo -u postgres psql -c "SELECT pg_relation_filepath('test_tbl');"
+ pg_relation_filepath
+----------------------
+ base/5/16385
+(1 строка)
+
 [root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pg_ctl -D /tmp/new_cluster stop
 ожидание завершения работы сервера.... готово
 сервер остановлен
 
+[root@postgresql log]# dd if=/dev/zero of=/tmp/new_cluster/base/5/16385 bs=1 count=8 seek=0 conv=notrunc
+8+0 записей получено
+8+0 записей отправлено
+8 байт скопировано, 0,000564745 s, 14,2 kB/s
+```
+#### Запускаю кластер, пытаюсь прочитать данные:
+```
+[root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pg_ctl -D /tmp/new_cluster start
+ожидание запуска сервера....2025-09-05 12:18:01.546 MSK [41651] СООБЩЕНИЕ:  передача вывода в протокол процессу сбора протоколов
+2025-09-05 12:18:01.546 MSK [41651] ПОДСКАЗКА:  В дальнейшем протоколы будут выводиться в каталог "log".
+ готово
+сервер запущен
+[root@postgresql log]# sudo -u postgres psql -c "SELECT * FROM test_tbl;"
+ПРЕДУПРЕЖДЕНИЕ:  ошибка проверки страницы: получена контрольная сумма 2029, а ожидалась - 32017
+ОШИБКА:  неверная страница в блоке 0 отношения base/5/16385
+```
+Ошибка происходит потому, что контрольные суммы страниц включены (благодаря флагу `--data-checksums` при инициализации), и PostgreSQL проверяет целостность данных при каждом чтении страницы с диска.  
+Чтобы проигнорировать ошибку и продолжить работу нужно временно отключить проверку контрольных сумм для текущей сессии:
+```
+[root@postgresql log]# sudo -u postgres psql -c "SET ignore_checksum_failure = on;"
+SET
+[root@postgresql log]# sudo -u postgres psql -c "SELECT * FROM test_tbl;"
+ id | data
+----+-------
+  1 | test1
+  2 | test2
+(2 строки)
 ```
