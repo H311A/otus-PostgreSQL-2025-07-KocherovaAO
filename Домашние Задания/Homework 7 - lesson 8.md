@@ -71,6 +71,30 @@ tps = 347.990686 (without initial connection time)
 Контрольные точки не выполнялись по расписанию раз в 30 секунд. Из-за интенсивной нагрузки `pgbench` генерировалось так много WAL-данных, что контрольные точки срабатывали досрочно при достижении `max_wal_size`, а не по истечении 30 секунд. Дисковая подсистема не успевала обрабатывать такой объем данных, что приводило к длительному выполнению контрольных точек.
 
 ## Tps в синхронном/асинхронном режиме: 
+#### Синхронный режим:
 ```
-
+[root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pgbench -T 60 test_db
+pgbench (17.6)
+starting vacuum...end.
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 23592
+number of failed transactions: 0 (0.000%)
+latency average = 2.543 ms
+initial connection time = 13.315 ms
+tps = 393.272919 (without initial connection time)
+```
+#### Асинхронный режим:
+```
+[root@postgresql log]# sudo -u postgres psql -c "ALTER SYSTEM SET synchronous_commit TO off;"
+ALTER SYSTEM
+[root@postgresql log]# systemctl restart postgresql-17
+[root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pgbench -T 60 test_db
+pgbench (17.6)
+starting vacuum...end.
 ```
