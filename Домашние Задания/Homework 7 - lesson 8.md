@@ -156,3 +156,10 @@ CREATE TABLE
 [root@postgresql log]# sudo -u postgres psql -c "INSERT INTO test_tbl (data) VALUES ('test1'), ('test2');"
 INSERT 0 2
 ````
+#### Останавливаю кластер, меняю пару байт в таблице:
+```
+[root@postgresql log]# sudo -u postgres /usr/pgsql-17/bin/pg_ctl -D /tmp/new_cluster stop
+ожидание завершения работы сервера.... готово
+сервер остановлен
+
+```
