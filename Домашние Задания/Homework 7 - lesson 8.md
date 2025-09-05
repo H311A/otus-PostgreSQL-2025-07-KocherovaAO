@@ -5,7 +5,7 @@
 Настраиваю выполнение контрольной точки раз в 30 секунд: `checkpoint_timeout = 30s`;  
 Перезагружаю сервер, чтобы применить изменения: `sudo systemctl restart postgresql-17`.  
 
-Дальше создаю новую базу `test_db`, измеряю до теста текущую позицию WAL до теста:
+Дальше создаю новую базу `test_db`, измеряю до теста текущую позицию WAL:
 ```
 [root@postgresql ~]# sudo -u postgres createdb test_db
 [root@postgresql ~]# sudo -u postgres /usr/pgsql-17/bin/pgbench -i test_db
