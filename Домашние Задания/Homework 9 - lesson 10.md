@@ -207,3 +207,21 @@ track_io_timing = on  # Включить отслеживание времени
 postgres=# CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 CREATE EXTENSION
 ```
+#### Метрика 1. Выявление самых медленных JOIN в системе для их оптимизации:
+```
+SELECT
+    query,
+    calls,
+    total_exec_time,
+    mean_exec_time,
+    rows,
+    regexp_replace(query, '.*(FROM.*JOIN.*WHERE).*', '\1', 'i') as join_section
+FROM
+    pg_stat_statements
+WHERE
+    query LIKE '%JOIN%' -- Запросы с JOIN
+    AND query NOT LIKE '%pg_stat_%' -- Скажем нет системным запросам
+ORDER BY
+    total_exec_time DESC -- Сортировка по общему времени выполнения
+LIMIT 10;
+```
