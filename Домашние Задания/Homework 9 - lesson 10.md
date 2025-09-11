@@ -138,7 +138,7 @@ INSERT INTO projects (project_name, emp_id) VALUES
 SELECT e.emp_name, d.dept_name, p.project_name
 FROM employees e
 INNER JOIN departments d ON e.dept_id = d.dept_id  -- Только сотрудники с отделом
-LEFT JOIN projects p ON e.emp_id = p.emp_id;
+LEFT JOIN projects p ON e.emp_id = p.emp_id;       -- Но все их проекты
 ```
 Сотрудников без отделов (как Сергеев) не будет, но у тех, кто есть, будут все их проекты, а если проектов нет - NULL:
 ```
@@ -154,8 +154,8 @@ LEFT JOIN projects p ON e.emp_id = p.emp_id;
 ```
 SELECT e.emp_name, d.dept_name, p.project_name
 FROM employees e
-FULL JOIN departments d ON e.dept_id = d.dept_id
-LEFT JOIN projects p ON e.emp_id = p.emp_id
+FULL JOIN departments d ON e.dept_id = d.dept_id     -- Все сотрудники и все отделы
+LEFT JOIN projects p ON e.emp_id = p.emp_id          -- Все сотрудники и все отделы
 ```
 Получаю всех сотрудников (даже без отдела), все отделы (даже без сотрудников), и проекты только для тех записей, где был реальный сотрудник (из левой части FULL JOIN):
 ```
