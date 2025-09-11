@@ -219,9 +219,62 @@ SELECT
 FROM
     pg_stat_statements
 WHERE
-    query LIKE '%JOIN%' -- Запросы с JOIN
-    AND query NOT LIKE '%pg_stat_%' -- Скажем нет системным запросам
+    query LIKE '%JOIN%'
+    AND query NOT LIKE '%pg_stat_%'
 ORDER BY
-    total_exec_time DESC -- Сортировка по общему времени выполнения
+    total_exec_time DESC
 LIMIT 10;
+```
+Запросы наверху списка дают наибольшую нагрузку на систему. Их стоит изучать в первую очередь: проверять индексы, условия соединения, возможность денормализации.
+#### Метрика 2. Неоптимальные JOIN (nested loop без индексов):
+```
+SELECT
+    s.query,
+    s.calls,
+    s.mean_exec_time,
+    CASE
+        WHEN s.query LIKE '%Nested Loop%' AND s.query LIKE '%Seq Scan%' THEN 'Nested Loop with Seq Scan'
+        WHEN s.query LIKE '%Hash Join%' THEN 'Hash Join'
+        WHEN s.query LIKE '%Merge Join%' THEN 'Merge Join'
+        ELSE 'Other'
+    END as join_type
+FROM
+    pg_stat_statements s
+WHERE
+    s.query LIKE '%JOIN%'
+    AND s.query NOT LIKE '%pg_stat_%'
+    AND (s.query LIKE '%Nested Loop%' AND s.query LIKE '%Seq Scan%')
+ORDER BY
+    s.total_exec_time DESC
+LIMIT 10;
+```
+Вывод показывает самые неэффективные JOIN, где PostgreSQL вынужден в цикле полностью сканировать одну из таблиц. 
+#### Метрика 3. Статистика по типам JOIN и их эффективности:
+```
+SELECT
+    CASE
+        WHEN query ILIKE '%INNER JOIN%' THEN 'INNER JOIN'
+        WHEN query ILIKE '%LEFT JOIN%' THEN 'LEFT JOIN'
+        WHEN query ILIKE '%RIGHT JOIN%' THEN 'RIGHT JOIN'
+        WHEN query ILIKE '%FULL JOIN%' THEN 'FULL JOIN'
+        WHEN query ILIKE '%CROSS JOIN%' THEN 'CROSS JOIN'
+        ELSE 'Other JOIN'
+    END AS join_type,
+    COUNT(*) AS query_count,
+    SUM(calls) AS total_calls,
+    ROUND(SUM(total_exec_time)::numeric, 2) AS total_time,
+    ROUND(AVG(mean_exec_time)::numeric, 2) AS avg_time,
+    ROUND(
+        ((SUM(rows)::numeric / NULLIF(SUM(total_exec_time)::numeric, 0)) * 1000)::numeric,
+        2
+    ) AS rows_per_second
+FROM
+    pg_stat_statements
+WHERE
+    query LIKE '%JOIN%'
+    AND query NOT LIKE '%pg_stat_%'
+GROUP BY
+    join_type
+ORDER BY
+    total_time DESC;
 ```
