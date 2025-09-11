@@ -119,3 +119,53 @@ FULL OUTER JOIN departments d ON e.dept_id = d.dept_id;
  (NULL)         | Поддержка
 (6 строк)
 ```
+## 5. Комбинирование разных типов соединений.
+Создам дополнительную таблицу `projects` с проектами. 
+```
+CREATE TABLE projects (
+    project_id SERIAL PRIMARY KEY,
+    project_name VARCHAR(50),
+    emp_id INT
+);
+
+INSERT INTO projects (project_name, emp_id) VALUES
+('Проект А', 1),
+('Проект Б', 2),
+('Проект В', 9);
+```
+### INNER JOIN + LEFT JOIN. Найду всех сотрудников, у которых есть отдел, и покажу их проекты (даже если проектов нет):
+```
+SELECT e.emp_name, d.dept_name, p.project_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.dept_id  -- Только сотрудники с отделом
+LEFT JOIN projects p ON e.emp_id = p.emp_id;
+```
+Сотрудников без отделов (как Сергеев) не будет, но у тех, кто есть, будут все их проекты, а если проектов нет - NULL:
+```
+    emp_name    | dept_name  | project_name
+----------------+------------+--------------
+ Иван Иванов    | Разработка | Проект А
+ Петр Петров    | Разработка | Проект Б
+ Анна Козлова   | Продажи    | (NULL)
+ Мария Сидорова | Маркетинг  | (NULL)
+(4 строки)
+```
+### FULL JOIN + LEFT JOIN. Я хочу получить полную картину по сотрудникам и отделам, а для тех, у кого есть отдел, показать проекты:
+```
+SELECT e.emp_name, d.dept_name, p.project_name
+FROM employees e
+FULL JOIN departments d ON e.dept_id = d.dept_id
+LEFT JOIN projects p ON e.emp_id = p.emp_id
+```
+Получаю всех сотрудников (даже без отдела), все отделы (даже без сотрудников), и проекты только для тех записей, где был реальный сотрудник (из левой части FULL JOIN):
+```
+    emp_name    | dept_name  | project_name
+----------------+------------+--------------
+ Иван Иванов    | Разработка | Проект А
+ Петр Петров    | Разработка | Проект Б
+ (NULL)         | Поддержка  | (NULL)
+ Сергей Сергеев | (NULL)     | (NULL)
+ Анна Козлова   | Продажи    | (NULL)
+ Мария Сидорова | Маркетинг  | (NULL)
+(6 строк)
+```
