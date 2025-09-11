@@ -204,4 +204,8 @@ AND e.emp_id = p.emp_id;                            -- Который работ
 shared_preload_libraries = 'pg_stat_statements'
 track_io_timing = on  # Включить отслеживание времени I/O
 ```
-Перезагружаю сервер.
+Перезагружаю сервер. Создаю расширение в базе данных:
+```
+postgres=# CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+CREATE EXTENSION
+```
