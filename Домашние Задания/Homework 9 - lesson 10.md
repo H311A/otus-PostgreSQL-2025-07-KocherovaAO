@@ -1,5 +1,5 @@
 ```
-Окружение: Oracle Limux 8.10, PostgreSQL 17.
+Окружение: Oracle Linux 8.10, PostgreSQL 17.
 ```
 # Работа с join'ами, статистикой.
 
