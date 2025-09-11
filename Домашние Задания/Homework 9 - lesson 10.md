@@ -173,9 +173,9 @@ LEFT JOIN projects p ON e.emp_id = p.emp_id
 ```
 SELECT d.dept_name, p.project_name, e.emp_name
 FROM departments d
-CROSS JOIN projects p                              
-LEFT JOIN employees e ON d.dept_id = e.dept_id
-AND e.emp_id = p.emp_id;
+CROSS JOIN projects p                          -- Все комбинации отделов и проектов                 
+LEFT JOIN employees e ON d.dept_id = e.dept_id -- Попытка найти сотрудника в отделе
+AND e.emp_id = p.emp_id;                       -- Который работает именно над этим проектом
 ```
 Я получаю все возможные пары "отдел-проект". Для большинства пар в `emp_name` будет `NULL`, так как такой связки не существует. Но если в отделе есть сотрудник, работающий над проектом, его имя будет указано:
 ```
