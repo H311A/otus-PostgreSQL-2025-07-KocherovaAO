@@ -133,7 +133,7 @@ INSERT INTO projects (project_name, emp_id) VALUES
 ('Проект Б', 2),
 ('Проект В', 9);
 ```
-### INNER JOIN + LEFT JOIN. Найду всех сотрудников, у которых есть отдел, и покажу их проекты (даже если проектов нет):
+#### a) INNER JOIN + LEFT JOIN. Найду всех сотрудников, у которых есть отдел, и покажу их проекты (даже если проектов нет):
 ```
 SELECT e.emp_name, d.dept_name, p.project_name
 FROM employees e
@@ -150,7 +150,7 @@ LEFT JOIN projects p ON e.emp_id = p.emp_id;
  Мария Сидорова | Маркетинг  | (NULL)
 (4 строки)
 ```
-### FULL JOIN + LEFT JOIN. Я хочу получить полную картину по сотрудникам и отделам, а для тех, у кого есть отдел, показать проекты:
+#### b) FULL JOIN + LEFT JOIN. Я хочу получить полную картину по сотрудникам и отделам, а для тех, у кого есть отдел, показать проекты:
 ```
 SELECT e.emp_name, d.dept_name, p.project_name
 FROM employees e
