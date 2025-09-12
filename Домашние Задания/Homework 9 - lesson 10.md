@@ -209,23 +209,32 @@ CREATE EXTENSION
 ```
 #### Метрика 1. Выявление самых медленных JOIN в системе для их оптимизации:
 ```
-SELECT
-    query,
+SELECT 
+    queryid,
     calls,
-    total_exec_time,
-    mean_exec_time,
-    rows,
-    regexp_replace(query, '.*(FROM.*JOIN.*WHERE).*', '\1', 'i') as join_section
-FROM
-    pg_stat_statements
-WHERE
-    query LIKE '%JOIN%'
-    AND query NOT LIKE '%pg_stat_%'
-ORDER BY
-    total_exec_time DESC
+    round(total_exec_time::numeric, 2) as total_time_ms,
+    round(mean_exec_time::numeric, 2) as avg_time_ms,
+    rows
+FROM pg_stat_statements 
+WHERE query LIKE '%JOIN%' 
+AND query NOT LIKE '%pg_stat_%'
+ORDER BY total_exec_time DESC 
 LIMIT 10;
 ```
-Запросы наверху списка дают наибольшую нагрузку на систему. Их стоит изучать в первую очередь: проверять индексы, условия соединения, возможность денормализации.
+Запросы наверху списка дают наибольшую нагрузку на систему. Их стоит изучать в первую очередь: проверять индексы, условия соединения, возможность денормализации.  
+Пример вывода:
+```
+       queryid        | calls | total_time_ms | avg_time_ms | rows
+----------------------+-------+---------------+-------------+------
+ -8917144814669508499 |     1 |        220.55 |      220.55 |  499
+ -4269329529793253551 |     1 |         18.95 |       18.95 |  300
+ -2378463660404591078 |     1 |         13.03 |       13.03 |  500
+  1834376733575628938 |     1 |         12.42 |       12.42 |  500
+ -2428091786180286149 |     1 |          2.40 |        2.40 |  500
+  7398335915666730765 |     1 |          1.21 |        1.21 |  200
+ -1790969765535309476 |     1 |          0.86 |        0.86 |  500
+(7 строк)
+```
 #### Метрика 2. Неоптимальные JOIN (nested loop без индексов):
 ```
 SELECT
