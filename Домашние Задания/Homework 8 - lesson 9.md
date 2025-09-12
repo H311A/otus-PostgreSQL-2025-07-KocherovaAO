@@ -4,7 +4,7 @@
 # Механизм блокировок.
 ### Настройка логирования длительных блокировок.
 Проверяю текущие настройки:
-```
+```sql
 postgres=# SELECT name, setting, unit FROM pg_settings WHERE name LIKE '%lock%' OR name LIKE '%deadlock%' OR name LIKE '%log%';
                 name                 |      setting      | unit
 -------------------------------------+-------------------+------
@@ -62,14 +62,14 @@ postgres=# SELECT name, setting, unit FROM pg_settings WHERE name LIKE '%lock%' 
 (51 строка)
 ```
 Устанавливаю параметр логирования блокировок:
-```
+```sql
 postgres=# ALTER SYSTEM SET log_lock_waits = on;
 ALTER SYSTEM
 postgres=# ALTER SYSTEM SET deadlock_timeout = '200ms';
 ALTER SYSTEM
 ```
 Применяю изменения, проверяю настройки:
-```
+```sql
 postgres=# SELECT pg_reload_conf();
  pg_reload_conf
 ----------------
@@ -90,7 +90,7 @@ postgres=# SHOW deadlock_timeout;
 ```
 #### Воспроизвожу ситуацию с длительной блокировкой:
 Сеанс 1:
-```
+```sql
 postgres=# CREATE TABLE test_locks (id SERIAL PRIMARY KEY, value INTEGER);
 CREATE TABLE
 postgres=# INSERT INTO test_locks (value) VALUES (100), (200), (300);
@@ -101,18 +101,18 @@ postgres=*# UPDATE test_locks SET value = value + 1 WHERE id = 1;
 UPDATE 1
 ```
 Сеанс 2:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = value + 10 WHERE id = 1;
 ```
 Лог PostgreSQL сообщает: 
-```
+```sql
 2025-09-05 12:58:21.590 MSK [56771] СООБЩЕНИЕ:  процесс 56771 продолжает ожидать в режиме ShareLock блокировку "транзакция 273521" в течение 201.017 мс
 ```
 ### Три команды UPDATE.
 Создаю представление для удобного представления блокировок:
-```
+```sql
 CREATE VIEW locks_v AS
 SELECT pid,
        locktype,
@@ -127,26 +127,26 @@ FROM pg_locks
 WHERE locktype in ('relation','transactionid','tuple');
 ```
 Сеанс 1:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 111 WHERE id = 1;
 UPDATE 1
 ```
 Сеанс 2:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 222 WHERE id = 1;
 ```
 Сеанс 3:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 333 WHERE id = 1;
 ```
 В четвертой сессии выполняю `SELECT * FROM locks_v ORDER BY pid, granted;`
-```
+```sql
 postgres=# SELECT * FROM locks_v ORDER BY pid, granted;
   pid  |   locktype    |     lockid      |       mode       | granted
 -------+---------------+-----------------+------------------+---------
@@ -190,36 +190,36 @@ pid 60661 (служебная сессия):
 
 ### Воспроизведение взаимоблокировки.
 Сеанс 1:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 111 WHERE id = 1;
 UPDATE 1
 ```
 Сеанс 2:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 222 WHERE id = 2;
 UPDATE 1
 ```
 Сеанс 3:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE test_locks SET value = 333 WHERE id = 3;
 UPDATE 1
 ```
 Сеанс 1:
-```
+```sql
 postgres=*# UPDATE test_locks SET value = 444 WHERE id = 2;
 ```
 Сеанс 2:
-```
+```sql
 postgres=*# UPDATE test_locks SET value = 555 WHERE id = 3;
 ```
 Сеанс 3:
-```
+```sql
 postgres=*# UPDATE test_locks SET value = 666 WHERE id = 1;
 ОШИБКА:  обнаружена взаимоблокировка
 ПОДРОБНОСТИ:  Процесс 68532 ожидает в режиме ShareLock блокировку "транзакция 273527"; заблокирован процессом 66510.
@@ -229,7 +229,7 @@ postgres=*# UPDATE test_locks SET value = 666 WHERE id = 1;
 КОНТЕКСТ:  при изменении кортежа (0,1) в отношении "test_locks"
 ```
 Журнал PostgreSQL сообщает:
-```
+```sql
 2025-09-05 13:29:18.246 MSK [66547] СООБЩЕНИЕ:  процесс 66547 продолжает ожидать в режиме ShareLock блокировку "транзакция 273529" в течение 200.383 мс
 2025-09-05 13:29:18.246 MSK [66547] ПОДРОБНОСТИ:  Process holding the lock: 68532. Wait queue: 66547.
 2025-09-05 13:29:18.246 MSK [66547] КОНТЕКСТ:  при изменении кортежа (0,3) в отношении "test_locks"
@@ -260,25 +260,25 @@ postgres=*# UPDATE test_locks SET value = 666 WHERE id = 1;
 2. Транзакция A блокирует строку 1 и движется к строке N. Транзакция B блокирует строку N и движется к строке 1. В какой-то момент они встречаются на одной из средних строк, и каждая пытается заблокировать строку, уже удерживаемую другой транзакцией. Возникает deadlock.
 #### Пытаюсь воспроизвести такую ситуацию:
 Сеанс 1:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE deadlock_test SET data = 'updated_by_1' WHERE id <= 10;
 UPDATE 10
 ```
 Сеанс 2:
-```
+```sql
 postgres=# BEGIN;
 BEGIN
 postgres=*# UPDATE deadlock_test SET data = 'updated_by_2' WHERE id >= 99990;
 UPDATE 11
 ```
 Сеанс 1:
-```
+```sql
 postgres=*# UPDATE deadlock_test SET data = 'conflict_1' WHERE id >= 99990;
 ```
 Сеанс 2:
-```
+```sql
 postgres=*# UPDATE deadlock_test SET data = 'conflict_2' WHERE id <= 10;
 ОШИБКА:  обнаружена взаимоблокировка
 ПОДРОБНОСТИ:  Процесс 75277 ожидает в режиме ShareLock блокировку "транзакция 273535"; заблокирован процессом 75666.
