@@ -207,58 +207,66 @@ track_io_timing = on  # Включить отслеживание времени
 postgres=# CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 CREATE EXTENSION
 ```
-#### Метрика 1. Выявление самых медленных JOIN в системе для их оптимизации:
+#### Метрика 1. 15 самых ресурсоемких JOIN-запросов в системе, анализ их производительность, потенциальные проблемы, предположительный характер соединений таблиц.
 ```
 SELECT 
     queryid,
-    calls,
-    round(total_exec_time::numeric, 2) as total_time_ms,
-    round(mean_exec_time::numeric, 2) as avg_time_ms,
-    rows
+    calls as "кол-во_вызовов",
+    round(total_exec_time::numeric, 2) as "общее_время_мс",
+    round(mean_exec_time::numeric, 2) as "среднее_время_мс",
+    rows as "строк_возвращено",
+    round((total_exec_time / NULLIF(calls, 0))::numeric, 2) as "время_на_вызов_мс",
+    CASE 
+        WHEN mean_exec_time > 10 AND calls > 5 THEN 'Высокое ср. время, много вызовов'
+        WHEN rows > 1000 AND mean_exec_time > 5 THEN 'Много строк, большое время выполнения'
+        WHEN calls > 100 AND mean_exec_time > 1 THEN 'Частый вызов, медленный'
+        ELSE 'Проверить вручную'
+    END as "проблема_производительности",
+    CASE 
+        WHEN query LIKE '%JOIN%JOIN%JOIN%' THEN 'Много JOIN - риск декартова произведения'
+        WHEN query LIKE '%WHERE%.% = %.%' THEN 'Возможно индексированный JOIN'
+        WHEN query LIKE '%WHERE%IS NOT NULL%' THEN 'Фильтрация перед JOIN'
+        ELSE 'Стандартный шаблон JOIN'
+    END as "шаблон_join"
 FROM pg_stat_statements 
 WHERE query LIKE '%JOIN%' 
 AND query NOT LIKE '%pg_stat_%'
-ORDER BY total_exec_time DESC 
-LIMIT 10;
+AND mean_exec_time > 1
+ORDER BY (total_exec_time * calls) DESC
+LIMIT 15;
 ```
-Запросы наверху списка дают наибольшую нагрузку на систему. Их стоит изучать в первую очередь: проверять индексы, условия соединения, возможность денормализации.  
 Пример вывода:
 ```
-       queryid        | calls | total_time_ms | avg_time_ms | rows
-----------------------+-------+---------------+-------------+------
- -8917144814669508499 |     1 |        220.55 |      220.55 |  499
- -4269329529793253551 |     1 |         18.95 |       18.95 |  300
- -2378463660404591078 |     1 |         13.03 |       13.03 |  500
-  1834376733575628938 |     1 |         12.42 |       12.42 |  500
- -2428091786180286149 |     1 |          2.40 |        2.40 |  500
-  7398335915666730765 |     1 |          1.21 |        1.21 |  200
- -1790969765535309476 |     1 |          0.86 |        0.86 |  500
-(7 строк)
+-[ RECORD 1 ]---------------+-----------------------------------------
+queryid                     | -8917144814669508499
+кол-во_вызовов              | 1
+общее_время_мс              | 220.55
+среднее_время_мс            | 220.55
+строк_возвращено            | 499
+время_на_вызов_мс           | 220.55
+проблема_производительности | Проверить вручную
+шаблон_join                 | Стандартный шаблон JOIN
+-[ RECORD 2 ]---------------+-----------------------------------------
+queryid                     | -4269329529793253551
+кол-во_вызовов              | 1
+общее_время_мс              | 18.95
+среднее_время_мс            | 18.95
+строк_возвращено            | 300
+время_на_вызов_мс           | 18.95
+проблема_производительности | Проверить вручную
+шаблон_join                 | Много JOIN - риск декартова произведения
+-[ RECORD 3 ]---------------+-----------------------------------------
+queryid                     | -2378463660404591078
+кол-во_вызовов              | 1
+общее_время_мс              | 13.03
+среднее_время_мс            | 13.03
+строк_возвращено            | 500
+время_на_вызов_мс           | 13.03
+проблема_производительности | Проверить вручную
+шаблон_join                 | Стандартный шаблон JOIN
 ```
-#### Метрика 2. Неоптимальные JOIN (nested loop без индексов):
-```
-SELECT
-    s.query,
-    s.calls,
-    s.mean_exec_time,
-    CASE
-        WHEN s.query LIKE '%Nested Loop%' AND s.query LIKE '%Seq Scan%' THEN 'Nested Loop with Seq Scan'
-        WHEN s.query LIKE '%Hash Join%' THEN 'Hash Join'
-        WHEN s.query LIKE '%Merge Join%' THEN 'Merge Join'
-        ELSE 'Other'
-    END as join_type
-FROM
-    pg_stat_statements s
-WHERE
-    s.query LIKE '%JOIN%'
-    AND s.query NOT LIKE '%pg_stat_%'
-    AND (s.query LIKE '%Nested Loop%' AND s.query LIKE '%Seq Scan%')
-ORDER BY
-    s.total_exec_time DESC
-LIMIT 10;
-```
-Вывод показывает самые неэффективные JOIN, где PostgreSQL вынужден в цикле полностью сканировать одну из таблиц. 
-#### Метрика 3. Статистика по типам JOIN и их эффективности:
+
+#### Метрика 2. Статистика по типам JOIN и их эффективности:
 ```
 SELECT
     CASE
