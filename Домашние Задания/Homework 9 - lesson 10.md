@@ -269,18 +269,21 @@ queryid                     | -2378463660404591078
 #### Метрика 2. Анализ эффективности индексов (которые занимают место, но никогда или очень редко используются).
 ```sql
 SELECT
-    schemaname as "схема",
-    relname as "таблица",
-    indexrelname as "индекс",
-    pg_size_pretty(pg_relation_size(indexrelid)) as "размер",
-    idx_scan as "сканирований",
-    idx_tup_read as "прочитано_строк",
-    idx_tup_fetch as "возвращено_строк",
+    relname as "Таблица",
+    indexrelname as "Индекс",
+    pg_size_pretty(pg_relation_size(indexrelid)) as "Размер",
+    idx_scan as "Сканирований",
     CASE
-        WHEN idx_scan = 0 THEN 'Никогда не использовался'
-        WHEN idx_scan < 100 AND pg_relation_size(indexrelid) > 1048576 THEN 'Редко используется (>1MB)'
-        ELSE 'Активный индекс'
-    END as "статус"
+        WHEN idx_scan = 0 THEN '❌ Никогда'
+        WHEN idx_scan < 10 THEN '🟡 Редко'
+        WHEN idx_scan < 100 THEN '🟢 Иногда'
+        ELSE '✅ Часто'
+    END as "Использование",
+    CASE
+        WHEN idx_scan = 0 AND pg_relation_size(indexrelid) > 1048576 THEN '🗑️ Удалить'
+        WHEN idx_scan < 100 AND pg_relation_size(indexrelid) > 1048576 THEN '👀 Проверить'
+        ELSE '✅ OK'
+    END as "Рекомендация"
 FROM
     pg_stat_all_indexes
 WHERE
@@ -292,23 +295,23 @@ LIMIT 15;
 ```
 Пример вывода:
 ```sql
- схема  |    таблица    |           индекс           | размер  | сканирований | прочитано_строк | возвращено_строк |          статус
---------+---------------+----------------------------+---------+--------------+-----------------+------------------+--------------------------
- public | products      | products_pkey              | 21 MB   |          885 |             885 |              881 | Активный индекс
- public | products      | idx_products_category      | 6848 kB |            0 |               0 |                0 | Никогда не использовался
- public | products      | idx_products_supplier_id   | 6816 kB |            0 |               0 |                0 | Никогда не использовался
- public | deadlock_test | deadlock_test_pkey         | 6600 kB |            0 |               0 |                0 | Никогда не использовался
- public | clients       | clients_pkey               | 5496 kB |          152 |          250235 |           250229 | Активный индекс
- public | clients       | idx_clients_status         | 1728 kB |            0 |               0 |                0 | Никогда не использовался
- public | order_items   | order_items_pkey           | 672 kB  |            0 |               0 |                0 | Никогда не использовался
- public | order_items   | idx_order_items_order_id   | 448 kB  |            6 |            1248 |             1244 | Активный индекс
- public | order_items   | idx_order_items_product_id | 240 kB  |            2 |               2 |                0 | Активный индекс
- public | orders        | orders_pkey                | 240 kB  |            6 |             436 |              432 | Активный индекс
- public | orders        | idx_orders_date            | 96 kB   |            1 |               1 |                0 | Активный индекс
- public | suppliers     | suppliers_pkey             | 72 kB   |           51 |              51 |               50 | Активный индекс
- public | projects      | idx_projects_emp_id        | 16 kB   |            0 |               0 |                0 | Никогда не использовался
- public | test_locks    | test_locks_pkey            | 16 kB   |            0 |               0 |                0 | Никогда не использовался
- public | departments   | departments_pkey           | 16 kB   |            0 |               0 |                0 | Никогда не использовался
+     Таблица    |           Индекс           | Размер  | Сканирований | Использование | Рекомендация
+---------------+----------------------------+---------+--------------+---------------+--------------
+ products      | products_pkey              | 21 MB   |          885 | ✅ Часто      | ✅ OK
+ products      | idx_products_category      | 6848 kB |            0 | ❌ Никогда    | 🗑️ Удалить
+ products      | idx_products_supplier_id   | 6816 kB |            0 | ❌ Никогда    | 🗑️ Удалить
+ deadlock_test | deadlock_test_pkey         | 6600 kB |            0 | ❌ Никогда    | 🗑️ Удалить
+ clients       | clients_pkey               | 5496 kB |          152 | ✅ Часто      | ✅ OK
+ clients       | idx_clients_status         | 1728 kB |            0 | ❌ Никогда    | 🗑️ Удалить
+ order_items   | order_items_pkey           | 672 kB  |            0 | ❌ Никогда    | ✅ OK
+ order_items   | idx_order_items_order_id   | 448 kB  |            6 | 🟡 Редко      | ✅ OK
+ order_items   | idx_order_items_product_id | 240 kB  |            2 | 🟡 Редко      | ✅ OK
+ orders        | orders_pkey                | 240 kB  |            6 | 🟡 Редко      | ✅ OK
+ orders        | idx_orders_date            | 96 kB   |            1 | 🟡 Редко      | ✅ OK
+ suppliers     | suppliers_pkey             | 72 kB   |           51 | 🟢 Иногда     | ✅ OK
+ projects      | idx_projects_emp_id        | 16 kB   |            0 | ❌ Никогда    | ✅ OK
+ test_locks    | test_locks_pkey            | 16 kB   |            0 | ❌ Никогда    | ✅ OK
+ departments   | departments_pkey           | 16 kB   |            0 | ❌ Никогда    | ✅ OK
 ```
 ### Метрика 3. Отслеживание активности и эффективности процессов очистки (VACUUM и AUTOVACUUM).
 ```sql
