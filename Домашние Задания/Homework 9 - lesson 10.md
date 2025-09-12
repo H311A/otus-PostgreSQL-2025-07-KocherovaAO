@@ -310,6 +310,28 @@ LIMIT 15;
  public | test_locks    | test_locks_pkey            | 16 kB   |            0 |               0 |                0 | Никогда не использовался
  public | departments   | departments_pkey           | 16 kB   |            0 |               0 |                0 | Никогда не использовался
 ```
-### Метрика 3. 
+### Метрика 3. Отслеживание активности и эффективности процессов очистки (VACUUM и AUTOVACUUM).
 ```sql
+SELECT
+    relname AS "Таблица",
+    n_live_tup AS "Живых",
+    n_dead_tup AS "Мёртвых",
+    pg_size_pretty(pg_table_size(relid)) AS "Размер",
+    CASE 
+        WHEN last_autovacuum IS NULL THEN 'Никогда'
+        ELSE (now() - last_autovacuum::timestamp)::text
+    END AS "Последний autovacuum",
+    CASE
+        WHEN n_dead_tup = 0 THEN '✅'
+        WHEN n_dead_tup > 0 AND n_dead_tup <= 100 THEN '⚠️ '
+        WHEN n_dead_tup > 100 THEN '❌'
+        ELSE '❓'
+    END AS "С"
+FROM
+    pg_stat_user_tables
+WHERE
+    n_dead_tup > 0 OR last_autovacuum IS NOT NULL
+ORDER BY
+    n_dead_tup DESC
+LIMIT 10;
 ```
