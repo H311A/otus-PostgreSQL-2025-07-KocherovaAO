@@ -266,32 +266,47 @@ queryid                     | -2378463660404591078
 шаблон_join                 | Стандартный шаблон JOIN
 ```
 
-#### Метрика 2. Статистика по типам JOIN и их эффективности:
+#### Метрика 2. Анализ эффективности индексов.
 ```
 SELECT
+    schemaname as "схема",
+    relname as "таблица",
+    indexrelname as "индекс",
+    pg_size_pretty(pg_relation_size(indexrelid)) as "размер",
+    idx_scan as "сканирований",
+    idx_tup_read as "прочитано_строк",
+    idx_tup_fetch as "возвращено_строк",
     CASE
-        WHEN query ILIKE '%INNER JOIN%' THEN 'INNER JOIN'
-        WHEN query ILIKE '%LEFT JOIN%' THEN 'LEFT JOIN'
-        WHEN query ILIKE '%RIGHT JOIN%' THEN 'RIGHT JOIN'
-        WHEN query ILIKE '%FULL JOIN%' THEN 'FULL JOIN'
-        WHEN query ILIKE '%CROSS JOIN%' THEN 'CROSS JOIN'
-        ELSE 'Other JOIN'
-    END AS join_type,
-    COUNT(*) AS query_count,
-    SUM(calls) AS total_calls,
-    ROUND(SUM(total_exec_time)::numeric, 2) AS total_time,
-    ROUND(AVG(mean_exec_time)::numeric, 2) AS avg_time,
-    ROUND(
-        ((SUM(rows)::numeric / NULLIF(SUM(total_exec_time)::numeric, 0)) * 1000)::numeric,
-        2
-    ) AS rows_per_second
+        WHEN idx_scan = 0 THEN 'Никогда не использовался'
+        WHEN idx_scan < 100 AND pg_relation_size(indexrelid) > 1048576 THEN 'Редко используется (>1MB)'
+        ELSE 'Активный индекс'
+    END as "статус"
 FROM
-    pg_stat_statements
+    pg_stat_all_indexes
 WHERE
-    query LIKE '%JOIN%'
-    AND query NOT LIKE '%pg_stat_%'
-GROUP BY
-    join_type
+    schemaname NOT IN ('pg_catalog', 'pg_toast', 'information_schema')
 ORDER BY
-    total_time DESC;
+    pg_relation_size(indexrelid) DESC,
+    idx_scan ASC
+LIMIT 15;
+```
+Пример вывода:
+```
+ схема  |    таблица    |           индекс           | размер  | сканирований | прочитано_строк | возвращено_строк |          статус
+--------+---------------+----------------------------+---------+--------------+-----------------+------------------+--------------------------
+ public | products      | products_pkey              | 21 MB   |          885 |             885 |              881 | Активный индекс
+ public | products      | idx_products_category      | 6848 kB |            0 |               0 |                0 | Никогда не использовался
+ public | products      | idx_products_supplier_id   | 6816 kB |            0 |               0 |                0 | Никогда не использовался
+ public | deadlock_test | deadlock_test_pkey         | 6600 kB |            0 |               0 |                0 | Никогда не использовался
+ public | clients       | clients_pkey               | 5496 kB |          152 |          250235 |           250229 | Активный индекс
+ public | clients       | idx_clients_status         | 1728 kB |            0 |               0 |                0 | Никогда не использовался
+ public | order_items   | order_items_pkey           | 672 kB  |            0 |               0 |                0 | Никогда не использовался
+ public | order_items   | idx_order_items_order_id   | 448 kB  |            6 |            1248 |             1244 | Активный индекс
+ public | order_items   | idx_order_items_product_id | 240 kB  |            2 |               2 |                0 | Активный индекс
+ public | orders        | orders_pkey                | 240 kB  |            6 |             436 |              432 | Активный индекс
+ public | orders        | idx_orders_date            | 96 kB   |            1 |               1 |                0 | Активный индекс
+ public | suppliers     | suppliers_pkey             | 72 kB   |           51 |              51 |               50 | Активный индекс
+ public | projects      | idx_projects_emp_id        | 16 kB   |            0 |               0 |                0 | Никогда не использовался
+ public | test_locks    | test_locks_pkey            | 16 kB   |            0 |               0 |                0 | Никогда не использовался
+ public | departments   | departments_pkey           | 16 kB   |            0 |               0 |                0 | Никогда не использовался
 ```
