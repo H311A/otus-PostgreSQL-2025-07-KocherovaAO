@@ -69,9 +69,24 @@ WHERE content_tsvector @@ to_tsquery('russian', 'интересный');
  Execution Time: 0.078 ms
 (6 строк)
 ```
-GIN-индекс используется для поиска лексем в тексте. `Bitmap Index Scan` означает, что индекс быстро нашел ссылки на строки, содержащие слово "интересный" .
+GIN-индекс используется для поиска лексем в тексте. `Bitmap Index Scan` означает, что индекс быстро нашел ссылки на строки, содержащие слово "интересный".
+### Индекс на часть таблицы.
+Если часто запрашиваем только активные книги, нет смысла индексировать неактивные. Частичный индекс уменьшает размер индекса и ускоряет работу.
 ```sql
+CREATE INDEX idx_books_active ON books(title) WHERE is_active = true;
 
+EXPLAIN ANALYZE
+SELECT * FROM books 
+WHERE is_active = true AND title LIKE 'Book 1%';
+
+                                               QUERY PLAN
+---------------------------------------------------------------------------------------------------------
+ Seq Scan on books  (cost=0.00..610.00 rows=1000 width=199) (actual time=0.367..6.005 rows=1000 loops=1)
+   Filter: (is_active AND (title ~~ 'Book 1%'::text))
+   Rows Removed by Filter: 9000
+ Planning Time: 26.975 ms
+ Execution Time: 6.119 ms
+(5 строк)
 ```
 
 ```sql
