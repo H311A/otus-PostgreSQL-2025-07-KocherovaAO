@@ -89,7 +89,43 @@ WHERE is_active = true AND age > 30;
  Execution Time: 48.034 ms
 (5 строк)
 ```
-#### Индекс
+#### Индекс на поле с функцией. 
+`idx_users_lower_username` функциональный индекс. Он создается не по значению столбца, а по результату выполнения функции над этим столбцом . Это идеально для регистронезависимого поиска без учета регистра, который часто используется с LOWER() или UPPER().
 ```sql
+CREATE INDEX idx_users_lower_username ON users(LOWER(username));
+
+EXPLAIN ANALYZE
+SELECT * FROM users WHERE LOWER(username) = LOWER('USER_75000');
+
+                                                             QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on users  (cost=12.29..1372.19 rows=500 width=119) (actual time=0.124..0.126 rows=1 loops=1)
+   Recheck Cond: (lower((username)::text) = 'user_75000'::text)
+   Heap Blocks: exact=1
+   ->  Bitmap Index Scan on idx_users_lower_username  (cost=0.00..12.17 rows=500 width=0) (actual time=0.109..0.109 rows=1 loops=1)
+         Index Cond: (lower((username)::text) = 'user_75000'::text)
+ Planning Time: 0.677 ms
+ Execution Time: 0.159 ms
+(7 строк)
+```
+### Индекс на несколько полей.
+Нужен для того, чтобы ускорить запросы, которые фильтруют или сортируют сразу по нескольким полям, например, по активности и дате создания.
+```sql
+CREATE INDEX idx_users_active_created ON users(is_active, created_at DESC);
+
+EXPLAIN ANALYZE
+SELECT username, created_at FROM users
+WHERE is_active = true
+ORDER BY created_at DESC
+LIMIT 10;
+
+                                                                   QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.29..1.59 rows=10 width=18) (actual time=0.102..0.114 rows=10 loops=1)
+   ->  Index Scan using idx_users_active_created on users  (cost=0.29..11682.99 rows=89783 width=18) (actual time=0.100..0.109 rows=10 loops=1)
+         Index Cond: (is_active = true)
+ Planning Time: 0.845 ms
+ Execution Time: 0.164 ms
+(5 строк)
 
 ```
