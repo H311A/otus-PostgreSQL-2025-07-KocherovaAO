@@ -79,7 +79,7 @@ SELECT * FROM departments;
 (5 строк)
 ```
 ### Выхожу из psql, создаю каталог для бэкапов:
-```
+```sql
 homework_db=# \q
 [postgres@postgresql ~]$ mkdir -p /var/lib/pgsql/backups
 [postgres@postgresql ~]$ ls -la /var/lib/pgsql/backups
@@ -89,7 +89,7 @@ drwx------. 6 postgres postgres 4096 окт 15 14:12 ..
 [postgres@postgresql ~]$ chmod 700 /var/lib/pgsql/backups
 ```
 ### Делаю логический бэкап с помощью COPY.
-```
+```sql
 psql -d homework_db
 
 COPY homework_schema.employees TO '/var/lib/pgsql/backups/employees_backup.csv' WITH CSV HEADER;
@@ -102,22 +102,63 @@ ls -la /var/lib/pgsql/backups/*.csv
 -rw-r--r--. 1 postgres postgres   80 окт 15 14:16 /var/lib/pgsql/backups/departments_backup.csv
 -rw-r--r--. 1 postgres postgres 6745 окт 15 14:15 /var/lib/pgsql/backups/employees_backup.csv
 ```
-### Восстанавливаю данные во вторую таблицу из бэкапа:
+### Восстанавливаю данные во вторую таблицу из бэкапа.
+Сначала создаю таблицу для восстановления, затем выхожу из psql для использовать COPY из командной строки:
+```sql
+CREATE TABLE homework_schema.departments_restored (
+    id SERIAL PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL,
+    manager_id INTEGER
+);
+CREATE TABLE
+
+\q
 ```
+### Восстанавливаю данные из CSV в новую таблицу и проверяю восстановление:
+```sql
+psql -d homework_db -c "COPY homework_schema.departments_restored FROM '/var/lib/pgsql/backups/departments_backup.csv' WITH CSV HEADER"
+COPY 5
+
+psql -d homework_db -c "SELECT * FROM homework_schema.departments_restored"
+ id | department_name | manager_id
+----+-----------------+------------
+  1 | IT              |          1
+  2 | HR              |          2
+  3 | Finance         |          3
+  4 | Marketing       |          4
+  5 | Sales           |          5
+(5 строк)
 ```
+### Бэкап двух таблиц с помощью pg_dump в кастомном сжатом формате.
+Создаю бэкап двух таблиц в кастомном формате со сжатием, проверяю созданный файл.
+```sql
+pg_dump -d homework_db -t homework_schema.employees -t homework_schema.departments -F c -Z 6 -f /var/lib/pgsql/backups/two_tables_backup.custom
+
+ls -lh /var/lib/pgsql/backups/two_tables_backup.custom
+-rw-r--r--. 1 postgres postgres 7,1K окт 15 14:23 /var/lib/pgsql/backups/two_tables_backup.custom
 ```
-```
-```
-```
-```
-```
-```
-```
-```
-```
-```
-```
-```
-```
-```
+### Восстанавливаю только вторую таблицу в новую БД.
+Создаю новую БД, восстанавливаю только таблицу departments в новую БД, проверяю данные в восстановленной таблице:
+```sql
+psql -c "CREATE DATABASE restored_db;"
+CREATE DATABASE
+
+pg_restore -d restored_db -n homework_schema -t departments /var/lib/pgsql/backups/two_tables_backup.custom
+
+psql -d restored_db -c "\dt homework_schema.*"
+                  Список отношений
+      Схема      |     Имя     |   Тип   | Владелец
+-----------------+-------------+---------+----------
+ homework_schema | departments | таблица | postgres
+(1 строка)
+
+psql -d restored_db -c "SELECT * FROM homework_schema.departments"
+ id | department_name | manager_id
+----+-----------------+------------
+  1 | IT              |          1
+  2 | HR              |          2
+  3 | Finance         |          3
+  4 | Marketing       |          4
+  5 | Sales           |          5
+(5 строк)
 ```
