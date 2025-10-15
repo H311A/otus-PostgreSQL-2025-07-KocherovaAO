@@ -78,10 +78,31 @@ SELECT * FROM departments;
   5 | Sales           |          5
 (5 строк)
 ```
+### Выхожу из psql, создаю каталог для бэкапов:
 ```
+homework_db=# \q
+[postgres@postgresql ~]$ mkdir -p /var/lib/pgsql/backups
+[postgres@postgresql ~]$ ls -la /var/lib/pgsql/backups
+итого 8
+drwxr-xr-x. 2 postgres postgres 4096 окт 15 14:12 .
+drwx------. 6 postgres postgres 4096 окт 15 14:12 ..
+[postgres@postgresql ~]$ chmod 700 /var/lib/pgsql/backups
 ```
+### Делаю логический бэкап с помощью COPY.
 ```
+psql -d homework_db
+
+COPY homework_schema.employees TO '/var/lib/pgsql/backups/employees_backup.csv' WITH CSV HEADER;
+COPY 100
+
+COPY homework_schema.departments TO '/var/lib/pgsql/backups/departments_backup.csv' WITH CSV HEADER;
+COPY 5
+
+ls -la /var/lib/pgsql/backups/*.csv
+-rw-r--r--. 1 postgres postgres   80 окт 15 14:16 /var/lib/pgsql/backups/departments_backup.csv
+-rw-r--r--. 1 postgres postgres 6745 окт 15 14:15 /var/lib/pgsql/backups/employees_backup.csv
 ```
+### Восстанавливаю данные во вторую таблицу из бэкапа:
 ```
 ```
 ```
