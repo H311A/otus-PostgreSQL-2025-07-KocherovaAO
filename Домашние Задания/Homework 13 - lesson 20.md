@@ -3,7 +3,7 @@
 ```
 # Бэкапы
 ### Создаю БД, схему и в ней таблицу. Заполняю таблицу автосгенерированными 100 записями.
-```
+```sql
 CREATE DATABASE homework_db;
 CREATE DATABASE
 
@@ -32,7 +32,7 @@ CREATE TABLE departments (
 );
 ```
 ### Заполняю таблицы автосгенерированными данными (100 записей)
-```
+```sql
 INSERT INTO employees (first_name, last_name, email, salary, hire_date)
 SELECT 
     'FirstName_' || seq,
